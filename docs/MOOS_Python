@@ -1,0 +1,32 @@
+MOOS with Python:
+https://github.com/davidhodo/pymoos
+    Also has instructions on building Boost libraries.
+    Depends on Python 3.2
+
+http://aims.robots.ox.ac.uk/wp-content/uploads/2016/02/python-moos.pdf
+    Mostly abandoned project.
+    Requires some details with the Boost libraries
+
+https://github.com/moos-tutorials/python-moos-tutorial
+    core-moos builds and installs
+    essential-moos can't find GetPot.hpp, so manually copied it to
+     /usr/local/include
+    essential-moos/Essentials/pShare/Share.cpp has a syntax error
+     with GetPot, so fixed it
+    after those two corrections, essential-moos builds
+    python-moos built the first try
+
+    needs PYTHONPATH=/usr/local/lib/python3.5/site-packages and then
+    the pymoos module is importable.
+
+https://github.com/msis/python-moos
+    Recommended by Mohamed, doesn't use Boost, uses pybind instead.
+
+
+https://dspace.mit.edu/bitstream/handle/1721.1/57583/MIT-CSAIL-TR-2010-041.pdf
+    Overview of MOOS-IvP
+
+Mohamed Saad IBN SEDDIK <ms.ibnseddik@gmail.com>
+Tommaso Fabbri <tommaso.fabbri@for.unipi.it>
+    Two active Python MOOS hackers
+

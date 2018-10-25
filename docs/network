@@ -1,0 +1,23 @@
+
+To configure network interfaces from the command line with nmcli:
+https://people.freedesktop.org/~lkundrak/nm-docs/nmcli-examples.html
+
+nmcli con add con-name "static-ens32" ifname ens32 type ethernet ip4 xxx.xxx.120.44/24 gw4 xxx.xxx.120.1
+
+nmcli con mod "static-ens32" ipv4.dns "xxx.xxx.120.1,8.8.8.8"
+
+nmcli con up "static-ens32" iface ens32
+
+nmcli con del "old-name"
+
+
+
+To configure WiFi:
+
+https://nullr0ute.com/2016/09/connect-to-a-wireless-network-using-command-line-nmcli/
+
+nmcli device wifi rescan
+nmcli device wifi list
+nmcli device wifi connect ${SSID} password ${PSK}
+nmcli connection
+

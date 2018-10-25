@@ -1,0 +1,6 @@
+https://en.wikipedia.org/wiki/Geographic_coordinate_system#Expressing_latitude_and_longitude_as_linear_units
+
+GPS in the Riptide has ±3 meters accuracy. That can be converted to a number
+of degrees for latitude and longitude using the formulae on the wikipedia
+page.
+

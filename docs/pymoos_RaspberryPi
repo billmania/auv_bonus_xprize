@@ -1,0 +1,26 @@
+Notes for building pymoos on the RaspberryPi 3 under
+
+https://github.com/msis/python-moos
+    Recommended by Mohamed, doesn't use Boost, uses pybind instead.
+
+Mohamed Saad IBN SEDDIK <ms.ibnseddik@gmail.com>
+
+- install git
+- verify python 3.5.2 is already installed as python3
+- follow the build procedure in
+    https://github.com/msis/python-moos/blob/pybind11/.travis.yml
+    to build core-moos
+
+    - export MOOS_CXX_FLAGS="-fPIC -Wno-long-long"
+    - install cmake
+
+- git clone https://github.com/msis/python-moos.git
+
+- export PYTHON_VERSION=3.5.2
+- cmake .. -DPYBIND11_PYTHON_VERSION=$PYTHON_VERSION
+- cmake --build .
+
+- cp pymoos.so and __init__.py into the directory ${BASE}/pymoos
+- export PYTHONPATH=${PYTHONPATH}:${BASE}
+
+
