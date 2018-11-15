@@ -14,18 +14,21 @@ class SearchSpace(object):
         """
         self._cubes = dict()
         self._plume_source = tuple()
+        self._search_paths = dict()
 
-    def next_search_waypoint(self):
-        """next_search_waypoint()
+    def next_path_waypoint(self, path_name='Default'):
+        """next_path_waypoint()
 
-        Return the next waypoint in the current search path.
+        Return the next waypoint in the named path.
         """
 
-        waypoint_x = 0.0
-        waypoint_y = 0.0
-        waypoint_depth = 0.0
-
-        return waypoint_y, waypoint_x, waypoint_depth
+        if path_name in self._search_paths:
+            if self._search_paths[path_name]:
+                return self._search_paths[path_name].pop(0)
+            else:
+                raise Exception('Path {0} is empty'.format(path_name))
+        else:
+            raise Exception('Path {0} does not exist'.format(path_name))
 
     def record_auv_path(
         self,
@@ -72,3 +75,12 @@ class SearchSpace(object):
         if self._max_depth <= 0.0:
             raise ValueError('Depth boundary is not in the water')
 
+    def define_search_path(self, path_name='Default', waypoint_list=None):
+        """define_search_path()
+
+        Record the ordered waypoints for a named search path.
+        """
+
+        self._search_paths[path_name] = list()
+        for waypoint in waypoint_list:
+            self._search_paths[path_name].append(waypoint)

@@ -3,12 +3,18 @@
 The functionality for the AUV.
 """
 
-from math import sqrt, pow
+from math import sqrt
 from auv_bonus_xprize.settings import config
+from auv.auv_moos import AuvMOOS
 
 
 class Auv(object):
     """Auv - The representation of the AUV.
+
+DESIRED_ELEVATOR
+DESIRED_RUDDER
+DESIRED_THRUST
+RT_RELEASE_DROPWEIGHT
 
     """
     def __init__(self, x=0.0, y=0.0, depth=0.0, heading=0.0):
@@ -35,23 +41,37 @@ class Auv(object):
 
         self._prop_velocity = 0
 
-    def move_to_waypoint(self,
-                         waypoint_x,
-                         waypoint_y,
-                         waypoint_depth):
+        variables_list = ['GPS_LATITUDE',
+                          'GPS_LONGITUDE',
+                          'GPS_HEADING',
+                          'NAV_HEADING',
+                          'NAV_DEPTH',
+                          'NAV_LAT',
+                          'NAV_LON',
+                          'NAV_X',
+                          'NAV_Y']
+        self.auv_control = AuvMOOS('localhost', 2345, 'auv', variables_list)
+
+    def move_to_waypoint(self, waypoint):
         """move_to_waypoint()
 
-        Control the prop_velocity, the elevator, and the rudder
+        Set the prop_velocity, the elevator, and the rudder
         in order to move the AUV from its current position
         to the waypoint.
         """
 
-        self._current_waypoint['x'] = waypoint_x
-        self._current_waypoint['y'] = waypoint_y
-        self._current_waypoint['depth'] = waypoint_depth
+        self._current_waypoint['x'] = waypoint[0]
+        self._current_waypoint['y'] = waypoint[1]
+        self._current_waypoint['depth'] = waypoint[2]
 
         distance_tolerance = float(config['auv']['distance_tolerance'])
         while self.distance_to_waypoint() > distance_tolerance:
+            #
+            # Get new prop, elevator, and rudder settings based
+            # on the bearing and range to the waypoint.
+            # Execute those settings in a loop while checking
+            # and recording dye levels.
+
             pass
 
     def distance_to_waypoint(self):
@@ -69,3 +89,36 @@ class Auv(object):
             distance += difference
 
         return sqrt(difference)
+
+    def record_pose_update(
+        self,
+        x,
+        y,
+        depth,
+        heading
+    ):
+        """record_pose_update()
+
+        Used as a callback to collect the navigation updates from
+        the AUV navigation subsystem and update the AUV's current
+        pose.
+        """
+
+        self._current_pose['x'] = x
+        self._current_pose['y'] = y
+        self._current_pose['depth'] = depth
+        self._current_pose['heading'] = heading
+
+    def settings_for_waypoint(self, waypoint):
+        """settings_for_waypoint()
+
+        Get the bearing and range to the given waypoint and
+        then calculate the appropriate prop speed, elevator,
+        and rudder settings to move the AUV toward that waypoint.
+        """
+
+        prop_speed = 0.0
+        elevator = 0.0
+        rudder = 0.0
+
+        return prop_speed, elevator, rudder

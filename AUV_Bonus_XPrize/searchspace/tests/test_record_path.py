@@ -20,6 +20,8 @@ def test_record_auv_path():
     sensor_value = 4
     sensor_gain = 10
 
+    assert len(search_space._cubes) == 0
+
     search_space.record_auv_path(
         path_x,
         path_y,
@@ -27,7 +29,8 @@ def test_record_auv_path():
         sensor_value,
         sensor_gain)
 
-    assert search_space._cubes
+    assert len(search_space._cubes) == 1
+    assert (path_x, path_y, path_depth) in search_space._cubes
 
 def test_set_search_boundaries():
     """test_set_search_boundaries

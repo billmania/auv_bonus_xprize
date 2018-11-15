@@ -38,17 +38,17 @@ class UuvMOOS(pymoos.comms):
                 print('NAV_HEADING data: {0}, time: {1}'.format(
                     msg.double(), msg.time()
                 ))
-                if (self.iter % 20) == 0:
-                    print('Moving the fins')
-                    self.fin_position = self.fin_position * -1
-                    self.notify('DESIRED_ELEVATOR',
-                                float(self.fin_position),
-                                -1
-                                )
-                    self.notify('DESIRED_THRUST',
-                                float(self.fin_position),
-                                -1
-                                )
+#                if (self.iter % 20) == 0:
+#                    print('Moving the fins')
+#                    self.fin_position = self.fin_position * -1
+#                    self.notify('DESIRED_ELEVATOR',
+#                                float(self.fin_position),
+#                                -1
+#                                )
+#                    self.notify('DESIRED_THRUST',
+#                                float(self.fin_position),
+#                                -1
+#                                )
         return True
 
 
