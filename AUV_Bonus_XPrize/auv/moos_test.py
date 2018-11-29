@@ -20,17 +20,17 @@ class UuvMOOS(pymoos.comms):
         self.iter = 0
         self.fin_position = 5
 
-        self.set_on_connect_callback(self.__on_connect)
-        self.set_on_mail_callback(self.__on_new_mail)
+        self.set_on_connect_callback(self._on_connect)
+        self.set_on_mail_callback(self._on_new_mail)
         self.run(self.server, self.port, self.name)
 
-    def __on_connect(self):
+    def _on_connect(self):
         """OnConnect callback"""
         print("Connected to", self.server, self.port,
               "under the name ", self.name)
         return self.register('NAV_HEADING', 0)
 
-    def __on_new_mail(self):
+    def _on_new_mail(self):
         """OnNewMail callback"""
         for msg in self.fetch():
             if msg.key() == 'NAV_HEADING':

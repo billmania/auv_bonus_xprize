@@ -28,12 +28,13 @@ class AuvMOOS(pymoos.comms):
         self.community = moos_community
         self.port = moos_port
         self.name = moos_name
-        self.variables_list = variables_list
+        self._variables_list = variables_list
+        self._data_callback = None
 
         logging.debug('registering the on_connect callback')
-        self.set_on_connect_callback(self.__on_connect)
+        self.set_on_connect_callback(self._on_connect)
         logging.debug('registering the on_mail callback')
-        self.set_on_mail_callback(self.__on_new_mail)
+        self.set_on_mail_callback(self._on_new_mail)
         logging.debug('calling the pymoos.run() method')
         try:
             self.run(self.community, self.port, self.name)
@@ -43,8 +44,8 @@ class AuvMOOS(pymoos.comms):
                 e))
             raise e
 
-    def __on_connect(self):
-        """__on_connect()
+    def _on_connect(self):
+        """_on_connect()
         """
 
         logging.info('Connected to MOOSDB at {0}:{1} named {2}'.format(
@@ -54,23 +55,24 @@ class AuvMOOS(pymoos.comms):
 
         self._register_variables()
 
-    def __on_new_mail(self):
-        """__on_new_mail()
+    def _on_new_mail(self):
+        """_on_new_mail()
         """
 
         for msg in self.fetch():
-            if msg.key() in self.variables_list:
-                logging.debug('{0} data: {1}, time: {2}'.format(
+            if msg.key() in self._variables_list:
+                logging.debug('{0} data: {1}'.format(
                     msg.key(),
-                    msg.double(),
-                    msg.time()))
+                    msg.double()))
+                if self._data_callback:
+                    self._data_callback(msg.key(), msg.double())
 
         return True
 
     def _register_variables(self):
         """_register_variables()
         """
-        for variable in self.variables_list:
+        for variable in self._variables_list:
             logging.debug('registering MOOS variable {0}'.format(variable))
             self.register(variable, 0)
 
@@ -85,3 +87,11 @@ class AuvMOOS(pymoos.comms):
         """
 
         self.notify(variable_name, variable_value, negative_one)
+
+    def set_data_callback(self, callback_function):
+        """set_data_callback()
+
+        Register a function to call with received MOOS variable data.
+        """
+
+        self._data_callback = callback_function

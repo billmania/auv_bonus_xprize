@@ -12,7 +12,7 @@ def test_record_auv_path():
     """
 
     from searchspace.searchspace import SearchSpace
-    search_space = SearchSpace()
+    search_space = SearchSpace(0, 0)
 
     path_x = 13.1
     path_y = 12.0
@@ -39,7 +39,7 @@ def test_set_search_boundaries():
     """
 
     from searchspace.searchspace import SearchSpace
-    search_space = SearchSpace()
+    search_space = SearchSpace(0, 0)
 
     northern_latitude = 14.654
     southern_latitude = 14.65
@@ -64,7 +64,7 @@ def test_set_search_boundaries_exception():
     """
 
     from searchspace.searchspace import SearchSpace
-    search_space = SearchSpace()
+    search_space = SearchSpace(0, 0)
 
     northern_latitude = 14.654
     southern_latitude = 14.7

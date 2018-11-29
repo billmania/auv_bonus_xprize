@@ -7,12 +7,12 @@ Tests for the SearchSpace class
 def test_class_exists():
     """test_class_exists
 
-    Doe the SearchSpace class definition exist.
+    Does the SearchSpace class definition exist.
     """
 
     from searchspace.searchspace import SearchSpace
 
-    search_space = SearchSpace()
+    search_space = SearchSpace(0, 0)
 
     assert search_space
 
@@ -25,7 +25,7 @@ def test_class_constructor():
 
     from searchspace.searchspace import SearchSpace
 
-    search_space = SearchSpace()
+    search_space = SearchSpace(0, 0)
 
     assert isinstance(search_space._cubes, dict)
     assert isinstance(search_space._plume_source, tuple)

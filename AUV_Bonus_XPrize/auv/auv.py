@@ -3,6 +3,7 @@
 The functionality for the AUV.
 """
 
+import logging
 from math import sqrt
 from auv_bonus_xprize.settings import config
 from auv.auv_moos import AuvMOOS
@@ -49,8 +50,30 @@ RT_RELEASE_DROPWEIGHT
                           'NAV_LAT',
                           'NAV_LON',
                           'NAV_X',
-                          'NAV_Y']
+                          'NAV_Y',
+                          'DESIRED_THRUST',
+                          'DESIRED_SPEED',
+                          'RT_RELEASE_DROPWEIGHT']
         self.auv_control = AuvMOOS('localhost', 2345, 'auv', variables_list)
+        self.auv_control.set_data_callback(self._process_auv_data)
+
+    def _process_auv_data(self, moos_variable_name, moos_variable_value):
+        """_process_auv_data()
+
+        The function called by the underlying MOOS system each time new data
+        is received from the AUV.
+        """
+
+        logging.debug('_process_auv_data() called')
+
+        if moos_variable_name == 'NAV_X':
+            self._current_pose['x'] = moos_variable_value
+        elif moos_variable_name == 'NAV_Y':
+            self._current_pose['y'] = moos_variable_value
+        elif moos_variable_name == 'NAV_DEPTH':
+            self._current_pose['depth'] = moos_variable_value
+        elif moos_variable_name == 'NAV_HEADING':
+            self._current_pose['heading'] = moos_variable_value
 
     def move_to_waypoint(self, waypoint):
         """move_to_waypoint()

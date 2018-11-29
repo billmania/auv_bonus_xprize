@@ -4,6 +4,7 @@ Tests for the SearchSpace search path methods
 """
 import pytest
 
+
 @pytest.fixture()
 def waypoint_list():
     current_x = 0.0
@@ -27,15 +28,26 @@ def waypoint_list():
 
     return search_path
 
-def test_next_path_waypoint(waypoint_list):
-    from searchspace.searchspace import SearchSpace
-    search_space = SearchSpace()
 
-    search_space.define_search_path(path_name='Path',
-                                    waypoint_list=waypoint_list)
+def test_next_path_waypoint(monkeypatch, waypoint_list):
+
+    from searchspace.searchspace import SearchSpace
+
+    search_space = SearchSpace(0, 0)
+
+    test_search_path = dict()
+    test_search_path['Path'] = waypoint_list
+    monkeypatch.setattr(search_space, '_search_paths', test_search_path)
+
+    assert 'Path' in search_space._search_paths.keys()
+    assert len(search_space._search_paths['Path']) == 6
 
     next_waypoint = search_space.next_path_waypoint(path_name='Path')
-    assert next_waypoint is waypoint_list[0]
+    assert next_waypoint == (0.0, 2.0, 1.0)
+    next_waypoint = search_space.next_path_waypoint(path_name='Path')
+    assert len(search_space._search_paths['Path']) == 4
+    assert next_waypoint == (-2.0, 2.0, 1.0)
+
 
 def test_define_search_path(waypoint_list):
     """test_define_search_path()
@@ -43,7 +55,7 @@ def test_define_search_path(waypoint_list):
     Define the waypoints which comprise a search path.
     """
     from searchspace.searchspace import SearchSpace
-    search_space = SearchSpace()
+    search_space = SearchSpace(0, 0)
 
     search_space.define_search_path(path_name='Test',
                                     waypoint_list=waypoint_list)
