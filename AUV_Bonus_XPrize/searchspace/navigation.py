@@ -3,6 +3,7 @@
 """
 from math import cos, radians
 from auv_bonus_xprize.settings import config
+from searchspace.geometry import Point
 
 
 class NavConverter(object):
@@ -79,8 +80,8 @@ class NavConverter(object):
 
         return instance
 
-    def _geo_to_cartesian(self, geo_position):
-        """geo_to_position()
+    def geo_to_cartesian(self, geo_position):
+        """geo_to_cartesian()
 
         Convert the lat and lon from position to x and y
         in the local area. Cartesian (0, 0) is equivalent
@@ -99,10 +100,10 @@ class NavConverter(object):
         x = lon_degrees_to_meters(lon - self._west_lon, self._center_lat)
         y = lat_degrees_to_meters(lat - self._south_lat, self._center_lat)
 
-        return (x, y)
+        return Point(x, y)
 
-    def _cartesian_to_geo(self, cartesian_position):
-        """_cartesian_to_geo()
+    def cartesian_to_geo(self, cartesian_position):
+        """cartesian_to_geo()
 
         Convert the x and y from cartesian_position to lat
         and lon. Geo (_west_lon, _south_lat) is equivalent to

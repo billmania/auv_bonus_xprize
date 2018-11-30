@@ -86,6 +86,14 @@ class Point(object):
             else:
                 self.quadrant = 'III'
 
+    def as_tuple(self):
+        """as_tuple()
+
+        Return the Point coordinates as a tuple.
+        """
+
+        return (self.x, self.y)
+
     def __repr__(self):
         """__repr__ Formatted output of the point dimensions."""
 
@@ -148,6 +156,8 @@ class Line(object):
         Given a point on the line and the angle of the line,
         determine the formula for the line and then use it
         to instantiate a Line.
+
+        https://www.mathsisfun.com/geometry/unit-circle.html
         """
 
         instance = cls()

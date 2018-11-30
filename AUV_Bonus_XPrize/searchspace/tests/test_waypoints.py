@@ -93,15 +93,44 @@ def test_next_track_heading(monkeypatch):
     monkeypatch.setattr(s, '_current_set', 160)
     assert s._next_track_heading((37.2, -125.001)) == 250
 
+
 def test_next_waypt():
     """test_next_waypt
     """
 
     from searchspace.searchspace import SearchSpace
-    s = SearchSpace(auv_latitude=None,
-                    auv_longitude=None)
+    from auv_bonus_xprize.settings import config
 
-    assert False
+    s = SearchSpace(auv_latitude=0.0,
+                    auv_longitude=0.0)
+    config['search']['boundary_buffer_meters'] = '10.0'
+
+    s.set_search_boundaries(21.0,
+                            20.9,
+                            -30.0,
+                            -30.1,
+                            10.0)
+    starting_waypt = s.nav_converter.geo_to_cartesian((20.91, -30.01))
+    northeast_corner = s.nav_converter.geo_to_cartesian((21.0, -30.0))
+    next_waypt = s._next_waypt(starting_waypt, 0)
+
+    assert next_waypt.x == starting_waypt.x
+    assert next_waypt.y == (northeast_corner.y -
+                            float(config['search']['boundary_buffer_meters']))
+
+    northwest_corner = s.nav_converter.geo_to_cartesian((21.0, -30.1))
+
+    next_waypt = s._next_waypt(starting_waypt, 270)
+
+    assert next_waypt.y == starting_waypt.y
+    assert next_waypt.x == (northwest_corner.x +
+                            float(config['search']['boundary_buffer_meters']))
+
+    next_waypt = s._next_waypt(starting_waypt, 280)
+
+    assert next_waypt.y != starting_waypt.y
+    assert next_waypt.x == (northwest_corner.x +
+                            float(config['search']['boundary_buffer_meters']))
 
 def test_next_track_depth():
     """test_next_track_depth

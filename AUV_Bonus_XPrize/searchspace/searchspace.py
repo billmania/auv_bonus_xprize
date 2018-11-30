@@ -6,6 +6,7 @@ operates.
 
 from auv_bonus_xprize.settings import config
 from searchspace.navigation import NavConverter
+from searchspace.geometry import Line, points_distance
 
 
 class SearchSpace(object):
@@ -84,7 +85,7 @@ class SearchSpace(object):
                     if 90 < track_heading < 270:
                         return track_heading
             else:
-                degrees_to_east = self._eastern_limit -starting_lon 
+                degrees_to_east = self._eastern_limit - starting_lon
                 if degrees_to_east <= (self._eastern_limit -
                                        self._western_limit) / 2.0:
                     if 180 <= track_heading < 360:
@@ -104,7 +105,7 @@ class SearchSpace(object):
 
         latitude = waypt[0]
         longitude = waypt[1]
-        if self._northern_limit > latitude  > self._southern_limit:
+        if self._northern_limit > latitude > self._southern_limit:
             if self._eastern_limit > longitude > self._western_limit:
                 return True
             else:
@@ -116,70 +117,86 @@ class SearchSpace(object):
         """_next_waypt()
 
         Calculate the waypoint which is at the given bearing
-        from the starting_waypt and as close to the relevant
-        boundary as the configuration parameters allow.
+        from the starting_waypt and on the appropriate boundary.
         """
-        waypt = (0.0, 0.0)
 
         bearing = bearing_to_next_waypt % 360
-        boundary_buffer = config['search']['boundary_buffer_meters']
 
-        if bearing == 0:
+        track = Line.construct_from_heading(
+            starting_waypt,
+            bearing)
+
+        if 0 <= bearing <= 90:
             #
-            # add the distance from the starting_waypt to the north
-            # buffer to the starting_waypt lat.
+            # Check the northern and eastern boundaries.
             #
-            pass
-        elif bearing < 90:
+            north_intersection = self._northern_boundary.find_intersection(track)
+            east_intersection = self._eastern_boundary.find_intersection(track)
+            if not east_intersection:
+                return north_intersection
+            elif not north_intersection:
+                return east_intersection
+            else:
+                if (points_distance(starting_waypt, north_intersection) <
+                    points_distance(starting_waypt, east_intersection)
+                ):
+                    return north_intersection
+                else:
+                    return east_intersection
+
+        elif 90 <= bearing <= 180:
             #
-            # add the distance from the starting_waypt to the east
-            # buffer to the starting_waypt lon. then add
-            # tan(bearing)A to the lat.
+            # Check the eastern and southern boundaries.
             # 
-            pass
-        elif bearing == 90:
+            south_intersection = self._southern_boundary.find_intersection(track)
+            east_intersection = self._eastern_boundary.find_intersection(track)
+            if not south_intersection:
+                return east_intersection
+            elif not east_intersection:
+                return south_intersection
+            else:
+                if (points_distance(starting_waypt, south_intersection) <
+                    points_distance(starting_waypt, east_intersection)
+                ):
+                    return south_intersection
+                else:
+                    return east_intersection
+
+        elif 180 <= bearing <= 270:
             #
-            # add the distance from the starting_waypt to the east
-            # buffer to the starting_waypt lon.
+            # Check the southern and western boundaries.
             #
-            pass
-        elif bearing < 180:
-            #
-            # subtract the distance from the starting_waypt to the
-            # south buffer from the starting_waypt lat. then add
-            # tan(bearing)A to the lon.
-            #
-            pass
-        elif bearing == 180:
-            #
-            # subtract the distance from the starting_waypt to the
-            # south buffer from the starting_waypt lat.
-            #
-            pass
-        elif bearing < 270:
-            #
-            # subtract the distance from the starting_waypt to the
-            # west buffer from the starting_waypt lon. then subtract
-            # tan(bearing)A from the lat.
-            #
-            pass
-        elif bearing == 270:
-            #
-            # subtract the distance from the starting_waypt to the
-            # west buffer from the starting_waypt lon.
-            #
-            pass
+            south_intersection = self._southern_boundary.find_intersection(track)
+            west_intersection = self._western_boundary.find_intersection(track)
+            if not south_intersection:
+                return west_intersection
+            elif not west_intersection:
+                return south_intersection
+            else:
+                if (points_distance(starting_waypt, south_intersection) <
+                    points_distance(starting_waypt, west_intersection)
+                ):
+                    return south_intersection
+                else:
+                    return west_intersection
+
         else:
             #
-            # add the distance from the starting_waypt to the north
-            # buffer to the starting_waypt lat. then  ...
+            # Check the western and northern boundaries.
             #
-            pass
-
-        # find the point which is on the boundary buffer
-        # use TOA to find the next waypt
-
-        return waypt
+            north_intersection = self._northern_boundary.find_intersection(track)
+            west_intersection = self._western_boundary.find_intersection(track)
+            if not north_intersection:
+                return west_intersection
+            elif not west_intersection:
+                return west_intersection
+            else:
+                if (points_distance(starting_waypt, north_intersection) <
+                    points_distance(starting_waypt, west_intersection)
+                ):
+                    return north_intersection
+                else:
+                    return west_intersection
 
     def record_auv_path(
         self,
@@ -220,30 +237,56 @@ class SearchSpace(object):
     ):
         """set_search_boundaries
 
-        Record the horizontal and depth boundaries of the search
-        space.
+        Calculate the horizontal search boundaries as lines offset
+        from the defined contest boundaries by a buffer. The lines
+        are defined with Cartesian coordinates.
         """
+
+        if northern_latitude <= southern_latitude:
+            raise ValueError('North and south boundaries illogical')
+
+        if eastern_longitude <= western_longitude:
+            raise ValueError('East and west boundaries illogical')
+
+        self._max_depth = depth
+        if self._max_depth <= 0.0:
+            raise ValueError('Depth boundary is not in the water')
+
+        self._max_depth = depth
 
         self._northern_limit = northern_latitude
         self._southern_limit = southern_latitude
         self._eastern_limit = eastern_longitude
         self._western_limit = western_longitude
-        self._max_depth = depth
-
-        if self._northern_limit <= self._southern_limit:
-            raise ValueError('North and south boundaries illogical')
-
-        if self._eastern_limit <= self._western_limit:
-            raise ValueError('East and west boundaries illogical')
-
-        if self._max_depth <= 0.0:
-            raise ValueError('Depth boundary is not in the water')
 
         self.nav_converter = NavConverter.construct_from_boundaries(
             self._northern_limit,
             self._southern_limit,
             self._eastern_limit,
             self._western_limit)
+
+        boundary_buffer = float(config['search']['boundary_buffer_meters'])
+
+        northwest_corner = self.nav_converter.geo_to_cartesian((
+            northern_latitude,
+            western_longitude))
+        southeast_corner = self.nav_converter.geo_to_cartesian((
+            southern_latitude,
+            eastern_longitude))
+
+        northwest_corner.x += boundary_buffer
+        northwest_corner.y -= boundary_buffer
+        southeast_corner.x -= boundary_buffer
+        southeast_corner.y += boundary_buffer
+
+        self._northern_boundary = Line.construct_from_heading(northwest_corner,
+                                                              90)
+        self._western_boundary = Line.construct_from_heading(northwest_corner,
+                                                             180)
+        self._eastern_boundary = Line.construct_from_heading(southeast_corner,
+                                                             0)
+        self._southern_boundary = Line.construct_from_heading(southeast_corner,
+                                                              270)
 
     def calculate_search_path(self):
         """calculate_search_path()
@@ -258,24 +301,28 @@ class SearchSpace(object):
         track_passes = int(max_depth / track_separation)
 
         track_heading = self._next_track_heading(
-            (self._auv_latitude, self._auv_longitude))
+            (self._auv_latitude,
+             self._auv_longitude))
         track_depth = self._auv_depth
 
-        waypt = (self._auv_latitude, self._auv_longitude, self._auv_depth)
-        waypt_list = list()
+        waypt = self.nav_converter.geo_to_cartesian((
+            self._auv_latitude,
+            self._auv_longitude
+        ))
+        search_path = list()
 
         while track_passes:
             waypt = self._next_waypt(waypt, track_heading)
-            waypt_list.append(waypt + (track_depth,))
+            search_path.append(waypt.as_tuple() + (track_depth,))
 
             track_depth = self._next_track_depth(track_depth)
-            waypt_list.append(waypt + (track_depth,))
+            search_path.append(waypt.as_tuple() + (track_depth,))
 
             track_heading = self._next_track_heading(waypt)
 
             track_passes = track_passes - 1
 
-        return waypt_list
+        return search_path
 
     def define_search_path(self, path_name='Default', waypoint_list=None):
         """define_search_path()

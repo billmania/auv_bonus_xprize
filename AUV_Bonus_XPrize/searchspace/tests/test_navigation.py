@@ -99,11 +99,13 @@ def test_geo_to_cartesian():
                                                 -65.5,
                                                 -65.6)
 
-    assert nc._geo_to_cartesian((30.4, -65.6)) == (0.0, 0.0)
+    point = nc.geo_to_cartesian((30.4, -65.6))
+    assert point.x == pytest.approx(0.0, rel=0.0001)
+    assert point.y == pytest.approx(0.0, rel=0.0001)
 
-    converted_position = nc._geo_to_cartesian((30.5, -65.5))
-    calculated_position = (nc._east_west_distance_meters, nc._north_south_distance_meters)
-    assert converted_position == calculated_position
+    converted_position = nc.geo_to_cartesian((30.5, -65.5))
+    assert converted_position.x == nc._east_west_distance_meters
+    assert converted_position.y == nc._north_south_distance_meters
 
 def test_cartesian_to_geo():
     """test_cartesian_to_geo()
@@ -115,9 +117,9 @@ def test_cartesian_to_geo():
                                                 -65.5,
                                                 -65.6)
 
-    assert nc._cartesian_to_geo((0.0, 0.0)) == (30.4, -65.6)
+    assert nc.cartesian_to_geo((0.0, 0.0)) == (30.4, -65.6)
 
-    converted_position = nc._cartesian_to_geo((nc._east_west_distance_meters,
-                                               nc._north_south_distance_meters))
+    converted_position = nc.cartesian_to_geo((nc._east_west_distance_meters,
+                                              nc._north_south_distance_meters))
     assert converted_position[0] == 30.5
     assert -65.39212 < converted_position[1] < -65.39211

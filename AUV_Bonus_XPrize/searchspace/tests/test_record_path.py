@@ -4,6 +4,7 @@ Tests for the SearchSpace AUV path methods
 """
 
 import pytest
+from auv_bonus_xprize.settings import config
 
 def test_record_auv_path():
     """test_record_auv_path
@@ -47,6 +48,9 @@ def test_set_search_boundaries():
     western_longitude = -32.12
     depth = 14.0
 
+    boundary_buffer = 10.0
+    config['search']['boundary_buffer_meters'] = str(boundary_buffer)
+
     search_space.set_search_boundaries(
         northern_latitude,
         southern_latitude,
@@ -54,8 +58,8 @@ def test_set_search_boundaries():
         western_longitude,
         depth)
 
-    assert search_space._northern_limit == northern_latitude
-    assert search_space._eastern_limit == eastern_longitude
+    assert search_space._max_depth == depth
+    assert search_space._southern_boundary.y_intercept == boundary_buffer
 
 def test_set_search_boundaries_exception():
     """test_set_search_boundaries_exception
