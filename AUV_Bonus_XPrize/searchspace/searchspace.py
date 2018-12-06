@@ -73,21 +73,22 @@ class SearchSpace(object):
         calculate the heading for the next track.
         """
 
-        starting_lat = starting_waypt[0]
-        starting_lon = starting_waypt[1]
-
         track_heading = (self._current_set + 90) % 360
         if self._inside_the_boundaries(starting_waypt):
             if self._track_is_more_north_south(track_heading):
-                degrees_to_north = self._northern_limit - starting_lat
-                if degrees_to_north <= (self._northern_limit -
-                                        self._southern_limit) / 2.0:
+                distance_to_north = self._northern_boundary.distance_to_point(
+                    starting_waypt)
+                distance_to_south = self._southern_boundary.distance_to_point(
+                    starting_waypt)
+                if distance_to_north <= distance_to_south:
                     if 90 < track_heading < 270:
                         return track_heading
             else:
-                degrees_to_east = self._eastern_limit - starting_lon
-                if degrees_to_east <= (self._eastern_limit -
-                                       self._western_limit) / 2.0:
+                distance_to_east = self._eastern_boundary.distance_to_point(
+                    starting_waypt)
+                distance_to_west = self._western_boundary.distance_to_point(
+                    starting_waypt)
+                if distance_to_east <= distance_to_west:
                     if 180 <= track_heading < 360:
                         return track_heading
 
@@ -103,15 +104,11 @@ class SearchSpace(object):
         bounded search area.
         """
 
-        latitude = waypt[0]
-        longitude = waypt[1]
-        if self._northern_limit > latitude > self._southern_limit:
-            if self._eastern_limit > longitude > self._western_limit:
-                return True
-            else:
-                return False
-        else:
-            return False
+        #
+        # TODO
+        #
+
+        return True
 
     def _next_waypt(self, starting_waypt, bearing_to_next_waypt):
         """_next_waypt()
@@ -219,7 +216,7 @@ class SearchSpace(object):
         """
 
         if 0 <= current_set < 360:
-            self._current_set = current_set,
+            self._current_set = current_set
         else:
             raise Exception('current_set must be a compass heading in degrees')
         if current_drift >= 0.0:
@@ -296,29 +293,28 @@ class SearchSpace(object):
         list of waypoints for the AUV to follow.
         """
 
-        max_depth = config['search']['max_depth_meters']
-        track_separation = config['search']['track_separation_meters']
+        max_depth = float(config['search']['max_depth_meters'])
+        track_separation = float(config['search']['track_separation_meters'])
         track_passes = int(max_depth / track_separation)
 
-        track_heading = self._next_track_heading(
-            (self._auv_latitude,
-             self._auv_longitude))
         track_depth = self._auv_depth
 
         waypt = self.nav_converter.geo_to_cartesian((
             self._auv_latitude,
             self._auv_longitude
         ))
+        track_heading = self._next_track_heading(waypt)
         search_path = list()
 
         while track_passes:
             waypt = self._next_waypt(waypt, track_heading)
             search_path.append(waypt.as_tuple() + (track_depth,))
 
-            track_depth = self._next_track_depth(track_depth)
-            search_path.append(waypt.as_tuple() + (track_depth,))
+            if track_passes > 1:
+                track_depth = self._next_track_depth(track_depth)
+                search_path.append(waypt.as_tuple() + (track_depth,))
 
-            track_heading = self._next_track_heading(waypt)
+                track_heading = self._next_track_heading(waypt)
 
             track_passes = track_passes - 1
 
