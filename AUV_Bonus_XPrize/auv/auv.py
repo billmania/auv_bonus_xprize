@@ -44,13 +44,12 @@ RT_RELEASE_DROPWEIGHT
 
         variables_list = ['GPS_LATITUDE',
                           'GPS_LONGITUDE',
-                          'GPS_HEADING',
                           'NAV_HEADING',
+                          'IMU_HEADING',
                           'NAV_DEPTH',
+                          'PS_DEPTH',
                           'NAV_LAT',
-                          'NAV_LON',
-                          'NAV_X',
-                          'NAV_Y',
+                          'NAV_LONG',
                           'DESIRED_THRUST',
                           'DESIRED_SPEED',
                           'RT_RELEASE_DROPWEIGHT']
