@@ -30,6 +30,7 @@ class AuvMOOS(pymoos.comms):
         self.name = moos_name
         self._variables_list = variables_list
         self._data_callback = None
+        self.connected = False
 
         logging.debug('registering the on_connect callback')
         self.set_on_connect_callback(self._on_connect)
@@ -54,6 +55,8 @@ class AuvMOOS(pymoos.comms):
             self.name))
 
         self._register_variables()
+
+        self.connected = True
 
     def _on_new_mail(self):
         """_on_new_mail()
