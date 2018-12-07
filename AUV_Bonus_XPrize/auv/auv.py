@@ -23,8 +23,8 @@ RT_RELEASE_DROPWEIGHT
         """
 
         self._current_pose = dict()
-        self._current_pose['x'] = x
-        self._current_pose['y'] = y
+        self._current_pose['lat'] = x
+        self._current_pose['lon'] = y
         self._current_pose['depth'] = depth
         self._current_pose['heading'] = heading
 
@@ -42,18 +42,15 @@ RT_RELEASE_DROPWEIGHT
 
         self._prop_velocity = 0
 
-        variables_list = ['GPS_LATITUDE',
-                          'GPS_LONGITUDE',
-                          'NAV_HEADING',
-                          'IMU_HEADING',
-                          'NAV_DEPTH',
+        variables_list = ['IMU_HEADING',
                           'PS_DEPTH',
                           'NAV_LAT',
-                          'NAV_LONG',
-                          'DESIRED_THRUST',
-                          'DESIRED_SPEED',
-                          'RT_RELEASE_DROPWEIGHT']
-        self.auv_control = AuvMOOS('localhost', 2345, 'auv', variables_list)
+                          'NAV_LONG']
+        self.auv_control = AuvMOOS(
+            config['auv']['host'],
+            int(config['auv']['port']),
+            config['auv']['name'],
+            variables_list)
         self.auv_control.set_data_callback(self._process_auv_data)
 
     def _process_auv_data(self, moos_variable_name, moos_variable_value):
@@ -65,13 +62,13 @@ RT_RELEASE_DROPWEIGHT
 
         logging.debug('_process_auv_data() called')
 
-        if moos_variable_name == 'NAV_X':
-            self._current_pose['x'] = moos_variable_value
-        elif moos_variable_name == 'NAV_Y':
-            self._current_pose['y'] = moos_variable_value
-        elif moos_variable_name == 'NAV_DEPTH':
+        if moos_variable_name == 'NAV_LAT':
+            self._current_pose['lat'] = moos_variable_value
+        elif moos_variable_name == 'NAV_LONG':
+            self._current_pose['lon'] = moos_variable_value
+        elif moos_variable_name == 'PS_DEPTH':
             self._current_pose['depth'] = moos_variable_value
-        elif moos_variable_name == 'NAV_HEADING':
+        elif moos_variable_name == 'IMU_HEADING':
             self._current_pose['heading'] = moos_variable_value
 
     def move_to_waypoint(self, waypoint):
@@ -105,7 +102,7 @@ RT_RELEASE_DROPWEIGHT
         """
 
         distance = float(0)
-        for axis in ['x', 'y', 'depth']:
+        for axis in ['lat', 'lon', 'depth']:
             difference = pow(self._current_pose[axis] -
                              self._current_waypoint[axis], 2)
             distance += difference
@@ -126,8 +123,8 @@ RT_RELEASE_DROPWEIGHT
         pose.
         """
 
-        self._current_pose['x'] = x
-        self._current_pose['y'] = y
+        self._current_pose['lat'] = x
+        self._current_pose['lon'] = y
         self._current_pose['depth'] = depth
         self._current_pose['heading'] = heading
 
