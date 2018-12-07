@@ -25,6 +25,8 @@ RT_RELEASE_DROPWEIGHT
         self._current_pose = dict()
         self._current_pose['lat'] = x
         self._current_pose['lon'] = y
+        self._current_pose['x'] = 0.0
+        self._current_pose['y'] = 0.0
         self._current_pose['depth'] = depth
         self._current_pose['heading'] = heading
 
@@ -45,7 +47,9 @@ RT_RELEASE_DROPWEIGHT
         variables_list = ['IMU_HEADING',
                           'PS_DEPTH',
                           'NAV_LAT',
-                          'NAV_LONG']
+                          'NAV_LONG',
+                          'NAV_X',
+                          'NAV_Y']
         self.auv_control = AuvMOOS(
             config['auv']['host'],
             int(config['auv']['port']),
@@ -66,6 +70,10 @@ RT_RELEASE_DROPWEIGHT
             self._current_pose['lat'] = moos_variable_value
         elif moos_variable_name == 'NAV_LONG':
             self._current_pose['lon'] = moos_variable_value
+        elif moos_variable_name == 'NAV_X':
+            self._current_pose['x'] = moos_variable_value
+        elif moos_variable_name == 'NAV_Y':
+            self._current_pose['y'] = moos_variable_value
         elif moos_variable_name == 'PS_DEPTH':
             self._current_pose['depth'] = moos_variable_value
         elif moos_variable_name == 'IMU_HEADING':
