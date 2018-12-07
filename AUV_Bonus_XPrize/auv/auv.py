@@ -53,7 +53,7 @@ RT_RELEASE_DROPWEIGHT
         self.auv_control = AuvMOOS(
             config['auv']['host'],
             int(config['auv']['port']),
-            config['auv']['name'],
+            config['auv']['community'],
             variables_list)
         self.auv_control.set_data_callback(self._process_auv_data)
 
