@@ -4,6 +4,19 @@
 import pytest
 
 
+@pytest.fixture()
+def vertex_list():
+    from searchspace.geometry import Point
+
+    vertices = list()
+    vertices.append(Point(1, 1))
+    vertices.append(Point(4, 1))
+    vertices.append(Point(4, 5))
+    vertices.append(Point(1, 5))
+
+    return vertices
+
+
 def test_compass_heading_to_polar_angle():
     """test_compass_heading_to_polar_angle
     """
@@ -98,3 +111,46 @@ def test_construct_from_heading():
     assert l.y_intercept == 1
     assert l.x is None
 
+
+def test_polygon(vertex_list):
+    """test_polygon
+
+    Test the constructor for the Polygon class.
+    """
+
+    from searchspace.geometry import Polygon
+
+    rectangle = Polygon(vertex_list)
+
+    assert len(rectangle._vertices) == 4
+
+
+def test_distance_to_vertices(vertex_list):
+    """test_distance_to_vertices
+    """
+
+    from searchspace.geometry import Polygon
+
+    rectangle = Polygon(vertex_list)
+
+    assert rectangle._distance_to_vertices(vertex_list[0]) == 12
+    assert rectangle._distance_to_vertices(vertex_list[1]) == 12
+    assert rectangle._distance_to_vertices(vertex_list[2]) == 12
+    assert rectangle._distance_to_vertices(vertex_list[3]) == 12
+    assert rectangle._inside_length == 12
+
+
+def test_point_is_inside(vertex_list):
+    """test_point_is_inside
+    """
+
+    from searchspace.geometry import Point, Polygon
+
+    inside_pt = Point(3, 4)
+    outside_pt = Point(5, 7)
+    on_the_edge_pt = Point(4, 3)
+    rectangle = Polygon(vertex_list)
+
+    assert rectangle.point_is_inside(inside_pt)
+    assert not rectangle.point_is_inside(outside_pt)
+    assert rectangle.point_is_inside(on_the_edge_pt)

@@ -1,7 +1,7 @@
 """Geometry
 
 Classes and methods for representing and interacting with
-points and lines.
+points, lines, and polygons.
 """
 
 from math import sqrt, radians, cos, sin
@@ -341,3 +341,48 @@ class Line(object):
             return 'y = %f * x - %f' % (self.slope, -1 * self.y_intercept)
 
         return 'y = %f * x + %f' % (self.slope, self.y_intercept)
+
+
+class Polygon(object):
+    """Polygon
+
+    Representation of a polygon
+    """
+
+    def __init__(self, vertices):
+        """__init__()
+
+        Construct the representation of a polygon defined
+        by the provided list of vertices.
+        """
+
+        if len(vertices) < 3:
+            raise Exception("Must provide a minimum of three vertices")
+
+        self._vertices = list()
+        for vertex in vertices:
+            self._vertices.append(vertex)
+
+        self._inside_length = self._distance_to_vertices(self._vertices[0])
+
+    def _distance_to_vertices(self, point):
+        """_distance_to_vertices()
+
+        Calculate the distance from the given point
+        to all of the polygon's vertices.
+        """
+
+        distance = 0.0
+        for vertex in self._vertices:
+            distance += points_distance(point, vertex)
+
+        return distance
+
+    def point_is_inside(self, point):
+        """point_is_inside()
+
+        Return True if the given point is inside the polygon
+        or on the edge, False otherwise.
+        """
+
+        return self._distance_to_vertices(point) < self._inside_length

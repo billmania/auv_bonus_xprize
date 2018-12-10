@@ -9,10 +9,10 @@ DESIRED_ELEVATOR integer degrees
 DESIRED_DEPTH
 DESIRED_HEADING
 DESIRED_SPEED
-DESIRED_THRUST integer percent of full power
+RT_THRUST_SPEED integer 0 to 3-ish
 """
 
-thurst = 50
+thrust = 3
 base_angle = 10
 
 def wiggle_controls():
@@ -51,13 +51,13 @@ auv.auv_control._publish_variable('DESIRED_RUDDER',
                                   -1)
 
 print('Setting thrust to {0}'.format(thrust))
-auv.auv_control._publish_variable('DESIRED_THRUST',
+auv.auv_control._publish_variable('RT_THRUST_SPEED',
                                   thrust,
                                   -1)
 sleep(1.0)
 
 print('Stopped')
-auv.auv_control._publish_variable('DESIRED_THRUST',
+auv.auv_control._publish_variable('RT_THRUST_SPEED',
                                   0,
                                   -1)
 print('Done')
