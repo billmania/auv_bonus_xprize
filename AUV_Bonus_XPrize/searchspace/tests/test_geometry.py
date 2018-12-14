@@ -9,10 +9,10 @@ def vertex_list():
     from searchspace.geometry import Point
 
     vertices = list()
-    vertices.append(Point(1, 1))
-    vertices.append(Point(4, 1))
-    vertices.append(Point(4, 5))
     vertices.append(Point(1, 5))
+    vertices.append(Point(4, 5))
+    vertices.append(Point(4, 1))
+    vertices.append(Point(1, 1))
 
     return vertices
 
@@ -27,12 +27,13 @@ def test_compass_heading_to_polar_angle():
     assert compass_heading_to_polar_angle(0) == pytest.approx(pi / 2,
                                                               rel=0.00001)
     assert compass_heading_to_polar_angle(90) == 0.0
-    assert compass_heading_to_polar_angle(180) == pytest.approx(3 * pi / 2,
+    assert compass_heading_to_polar_angle(180) == pytest.approx(-pi / 2,
                                                                 rel=0.00001)
     assert compass_heading_to_polar_angle(360) == pytest.approx(pi / 2,
                                                                 rel=0.00001)
     assert compass_heading_to_polar_angle(270) == pytest.approx(pi,
                                                                 rel=0.00001)
+
 
 def test_formula_from_points():
     """test_formula_from_points
@@ -125,21 +126,6 @@ def test_polygon(vertex_list):
     assert len(rectangle._vertices) == 4
 
 
-def test_distance_to_vertices(vertex_list):
-    """test_distance_to_vertices
-    """
-
-    from searchspace.geometry import Polygon
-
-    rectangle = Polygon(vertex_list)
-
-    assert rectangle._distance_to_vertices(vertex_list[0]) == 12
-    assert rectangle._distance_to_vertices(vertex_list[1]) == 12
-    assert rectangle._distance_to_vertices(vertex_list[2]) == 12
-    assert rectangle._distance_to_vertices(vertex_list[3]) == 12
-    assert rectangle._inside_length == 12
-
-
 def test_point_is_inside(vertex_list):
     """test_point_is_inside
     """
@@ -154,3 +140,9 @@ def test_point_is_inside(vertex_list):
     assert rectangle.point_is_inside(inside_pt)
     assert not rectangle.point_is_inside(outside_pt)
     assert rectangle.point_is_inside(on_the_edge_pt)
+
+    polygon = Polygon([Point(1, 5), Point(4, 5), Point(3, 1), Point(2, 1)])
+    outside_pt = Point(1, 1)
+
+    assert polygon.point_is_inside(inside_pt)
+    assert not polygon.point_is_inside(outside_pt)

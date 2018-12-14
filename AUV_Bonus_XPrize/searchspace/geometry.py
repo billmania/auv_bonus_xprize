@@ -4,7 +4,8 @@ Classes and methods for representing and interacting with
 points, lines, and polygons.
 """
 
-from math import sqrt, radians, cos, sin
+from math import sqrt, radians, cos, sin, pi
+import matplotlib.path as mplPath
 
 INFINITE = float("inf")
 
@@ -14,6 +15,9 @@ def points_distance(point1, point2):
 
     Calculate the Euclidean distance between point1 and point2.
     """
+
+    if point1 is point2 or (point1.x == point2.x and point1.y == point2.y):
+        return 0.0
 
     return sqrt((point1.x - point2.x) ** 2 +
                 (point1.y - point2.y) ** 2)
@@ -31,8 +35,14 @@ def compass_heading_to_polar_angle(heading):
     and the angle value increasing from the east to the north.
     """
 
-    compass_heading = heading % 360
-    return radians((-1 * (compass_heading - 360) + 90) % 360)
+    compass_heading = int(heading) % 360
+    angle = radians((-1 * (compass_heading - 360) + 90) % 360)
+
+    if angle > pi:
+        return angle - 2 * pi
+    else:
+        return angle
+
 
 def formula_from_points(p1, p2):
     """formula_from_points()
@@ -98,6 +108,7 @@ class Point(object):
         """__repr__ Formatted output of the point dimensions."""
 
         return '(%f, %f)' % (self.x, self.y)
+
 
 class Line(object):
     """Line
@@ -273,8 +284,7 @@ class Line(object):
     def point_at_distance(self,
                           starting_point,
                           destination_point,
-                          distance
-                         ):
+                          distance):
         """point_at_distance
 
         Find the point on the line which is distance units from
@@ -361,28 +371,18 @@ class Polygon(object):
 
         self._vertices = list()
         for vertex in vertices:
-            self._vertices.append(vertex)
+            self._vertices.append([vertex.x, vertex.y])
 
-        self._inside_length = self._distance_to_vertices(self._vertices[0])
-
-    def _distance_to_vertices(self, point):
-        """_distance_to_vertices()
-
-        Calculate the distance from the given point
-        to all of the polygon's vertices.
-        """
-
-        distance = 0.0
-        for vertex in self._vertices:
-            distance += points_distance(point, vertex)
-
-        return distance
+        self._vertex_path = mplPath.Path(self._vertices)
 
     def point_is_inside(self, point):
         """point_is_inside()
+
+        https://stackoverflow.com/questions/16625507/python-checking-if-point-is-inside-a-polygon
 
         Return True if the given point is inside the polygon
         or on the edge, False otherwise.
         """
 
-        return self._distance_to_vertices(point) < self._inside_length
+        return self._vertex_path.contains_point(point=point.as_tuple(),
+                                                radius=-0.1)

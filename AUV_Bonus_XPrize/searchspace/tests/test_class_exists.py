@@ -12,7 +12,7 @@ def test_class_exists():
 
     from searchspace.searchspace import SearchSpace
 
-    search_space = SearchSpace(0, 0)
+    search_space = SearchSpace()
 
     assert search_space
 
@@ -25,7 +25,6 @@ def test_class_constructor():
 
     from searchspace.searchspace import SearchSpace
 
-    search_space = SearchSpace(0, 0)
+    search_space = SearchSpace()
 
     assert isinstance(search_space._cubes, dict)
-    assert isinstance(search_space._plume_source, tuple)

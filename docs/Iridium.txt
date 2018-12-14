@@ -1,0 +1,17 @@
+12 Dec 2018
+
+Cory Duce is an EE
+Edmonton, Alberta, Canada
+780 360 5269
+
+hardware and firmware development for Quest
+currently firmware for space station hardware and MBARI project
+
+Stephen sending to Cory:
+Arduino Mega
+custom shield with Iridium and GPS and RT clock
+
+we'll use the dedicated RaspPi RS232C pins to communicate
+
+Cory will write the communication spec for this, in the next
+couple of days.

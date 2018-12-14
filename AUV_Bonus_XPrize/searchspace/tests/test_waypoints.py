@@ -31,145 +31,131 @@ def waypoint_list():
     return search_path
 
 
-def test_track_is_more_north_south():
-    """test_track_is_more_north_south()
-    """
-
-    from searchspace.searchspace import SearchSpace
-    s = SearchSpace(auv_latitude=0.0,
-                    auv_longitude=0.0)
-
-    assert s._track_is_more_north_south(44)
-    assert s._track_is_more_north_south(224)
-    assert not s._track_is_more_north_south(226)
-    assert not s._track_is_more_north_south(46)
-    assert s._track_is_more_north_south(0)
-    assert s._track_is_more_north_south(360)
-    assert s._track_is_more_north_south(180)
-    assert not s._track_is_more_north_south(270)
-
-
 def test_inside_the_boundaries(monkeypatch):
     """test_inside_the_boundaries()
     """
     from searchspace.searchspace import SearchSpace
-    s = SearchSpace(auv_latitude=0.0,
-                    auv_longitude=0.0)
-    monkeypatch.setattr(s, '_northern_limit', 37.5)
-    monkeypatch.setattr(s, '_southern_limit', 37.0)
-    monkeypatch.setattr(s, '_eastern_limit', -125.0)
-    monkeypatch.setattr(s, '_western_limit', -125.5)
-    assert s._inside_the_boundaries((37.001, -125.25))
+    from searchspace.geometry import Point, Polygon
 
-    assert not s._inside_the_boundaries((37.001, -124.0))
+    s = SearchSpace()
+    monkeypatch.setattr(s,
+                        '_boundary_polygon',
+                        Polygon([Point(10, 300),
+                                 Point(100, 300),
+                                 Point(100, 100),
+                                 Point(10, 100)]))
 
-    assert not s._inside_the_boundaries((37.6, -125.1))
+    inside_pt = Point(80, 150)
+    outside_pt = Point(80, 310)
+    on_the_edge = Point(99, 150)
 
-    assert not s._inside_the_boundaries((37.0, -124.0))
+    assert s._inside_the_boundaries(inside_pt)
+    assert not s._inside_the_boundaries(outside_pt)
+    assert s._inside_the_boundaries(on_the_edge)
 
 
-def test_next_track_heading(monkeypatch):
-    """test_next_track_heading
+def test_get_starting_waypt():
+    """test_get_starting_waypt()
 
-    Given the sea current velocity and the current position
-    of the AUV, calculate the heading for the next track.
     """
+    from auv_bonus_xprize.settings import config
+    from searchspace.searchspace import _starting_waypt
 
-    from searchspace.searchspace import SearchSpace
-    s = SearchSpace(auv_latitude=None,
-                    auv_longitude=None)
-    monkeypatch.setattr(s, '_current_set', 90)
-    monkeypatch.setattr(s, '_northern_limit', 37.5)
-    monkeypatch.setattr(s, '_southern_limit', 37.0)
-    monkeypatch.setattr(s, '_eastern_limit', -125.0)
-    monkeypatch.setattr(s, '_western_limit', -125.5)
-    assert s._next_track_heading((37.001, -125.25)) == 0
+    config['starting']['auv_position_utm'] = '100,300'
 
-    assert s._next_track_heading((37.2, -125.001)) == 0
+    waypt = _starting_waypt()
 
-    monkeypatch.setattr(s, '_current_set', 10)
-    assert s._next_track_heading((37.2, -125.001)) == 280
-
-    monkeypatch.setattr(s, '_current_set', 160)
-    assert s._next_track_heading((37.2, -125.001)) == 250
+    assert waypt.x == 100
+    assert waypt.y == 300
 
 
-def test_next_waypt():
-    """test_next_waypt
+def test_next_track_heading_and_waypt(monkeypatch):
+    """test_next_track_heading_and_waypt
+
     """
 
     from searchspace.searchspace import SearchSpace
     from auv_bonus_xprize.settings import config
+    from searchspace.geometry import Point, Line, Polygon
 
-    s = SearchSpace(auv_latitude=0.0,
-                    auv_longitude=0.0)
-    config['search']['boundary_buffer_meters'] = '10.0'
+    config['starting']['auv_position_utm'] = '80,150'
+    config['starting']['northwest_utm'] = '10,300'
+    config['starting']['northeast_utm'] = '100,300'
+    config['starting']['southeast_utm'] = '100,100'
+    config['starting']['southwest_utm'] = '10,100'
 
-    s.set_search_boundaries(21.0,
-                            20.9,
-                            -30.0,
-                            -30.1,
-                            10.0)
-    starting_waypt = s.nav_converter.geo_to_cartesian((20.91, -30.01))
-    northeast_corner = s.nav_converter.geo_to_cartesian((21.0, -30.0))
-    next_waypt = s._next_waypt(starting_waypt, 0)
+    s = SearchSpace()
+    monkeypatch.setattr(s,
+                        '_boundary_polygon',
+                        Polygon([Point(10, 300),
+                                 Point(100, 300),
+                                 Point(100, 100),
+                                 Point(10, 100)]))
 
-    assert next_waypt.x == starting_waypt.x
-    assert next_waypt.y == (northeast_corner.y -
-                            float(config['search']['boundary_buffer_meters']))
+    monkeypatch.setattr(s,
+                        '_northern_boundary',
+                        Line.construct_from_two_points(
+                            Point(10, 300),
+                            Point(100, 300)))
 
-    northwest_corner = s.nav_converter.geo_to_cartesian((21.0, -30.1))
+    monkeypatch.setattr(s,
+                        '_eastern_boundary',
+                        Line.construct_from_two_points(
+                            Point(100, 300),
+                            Point(100, 100)))
+    monkeypatch.setattr(s,
+                        '_southern_boundary',
+                        Line.construct_from_two_points(
+                            Point(100, 100),
+                            Point(10, 100)))
+    monkeypatch.setattr(s,
+                        '_western_boundary',
+                        Line.construct_from_two_points(
+                            Point(10, 100),
+                            Point(10, 300)))
 
-    next_waypt = s._next_waypt(starting_waypt, 270)
+    monkeypatch.setattr(s, '_current_set', 90)
 
-    assert next_waypt.y == starting_waypt.y
-    assert next_waypt.x == (northwest_corner.x +
-                            float(config['search']['boundary_buffer_meters']))
+    heading, waypt = s._next_track_heading_and_waypt(Point(80, 150))
+    assert waypt.x == 80 and waypt.y == 300
+    assert heading == 0
 
-    next_waypt = s._next_waypt(starting_waypt, 280)
+    monkeypatch.setattr(s, '_current_set', 270)
+    heading, waypt = s._next_track_heading_and_waypt(Point(80, 150))
+    assert waypt.x == 80 and waypt.y == 300
+    assert heading == 0
 
-    assert next_waypt.y != starting_waypt.y
-    assert next_waypt.x == (northwest_corner.x +
-                            float(config['search']['boundary_buffer_meters']))
+    monkeypatch.setattr(s, '_current_set', 0)
+    heading, waypt = s._next_track_heading_and_waypt(Point(80, 150))
+    assert waypt.x == 10 and waypt.y == 150
+    assert heading == 270
+
+    monkeypatch.setattr(s, '_current_set', 135)
+    heading, waypt = s._next_track_heading_and_waypt(Point(80, 105))
+    assert waypt.x == 100 and waypt.y == 125
+    assert heading == 45
+
+    monkeypatch.setattr(s, '_current_set', 225)
+    heading, waypt = s._next_track_heading_and_waypt(Point(80, 105))
+    assert waypt.x == 10 and waypt.y == 175
+    assert heading == 315
 
 def test_next_track_depth():
     """test_next_track_depth
 
     """
 
-    from searchspace.searchspace import SearchSpace
-    s = SearchSpace(auv_latitude=None,
-                    auv_longitude=None)
+    from searchspace.searchspace import _next_track_depth
     from auv_bonus_xprize.settings import config
 
     config['search']['track_separation_meters'] = '4.5'
     config['search']['min_depth_meters'] = '0.5'
     config['search']['max_depth_meters'] = '30.0'
-    assert s._next_track_depth(14.0) == 18.5
+    assert _next_track_depth(14.0) == 18.5
 
     config['search']['track_separation_meters'] = '7.0'
     config['search']['max_depth_meters'] = '20.0'
-    assert s._next_track_depth(14.0) == 20.0
+    assert _next_track_depth(14.0) == 20.0
 
     config['search']['track_separation_meters'] = '-5.0'
-    assert s._next_track_depth(14.0) == 9.0
-
-
-def test_need_gps_fix():
-    """test_need_gps_fix
-
-    Based on the time elapsed since the previous GPS fix and the estimate
-    of the tracking error, determine if it's necessary to surface in order
-    to acquire a GPS fix and adjust the AUV's position.
-    """
-
-    assert False
-
-
-def test_get_gps_fix():
-    """test_get_gps_fix
-
-    Move the AUV to the surface and acquire a GPS fix.
-    """
-
-    assert False
+    assert _next_track_depth(14.0) == 9.0

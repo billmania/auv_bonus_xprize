@@ -5,6 +5,24 @@ Tests for the SearchSpace search path methods
 import pytest
 
 
+@pytest.fixture
+def boundary_vertices():
+    """boundary_vertices
+
+    Fixture to provide search boundary vertices.
+    """
+
+    from searchspace.geometry import Point
+
+    boundary_vertices = list()
+    boundary_vertices.append(Point(18.1, -37.1))
+    boundary_vertices.append(Point(18.1, -37.0))
+    boundary_vertices.append(Point(18.0, -37.0))
+    boundary_vertices.append(Point(18.0, -37.1))
+
+    return boundary_vertices
+
+
 @pytest.fixture()
 def waypoint_list():
     current_x = 0.0
@@ -29,11 +47,66 @@ def waypoint_list():
     return search_path
 
 
+def test_record_auv_path():
+    """test_record_auv_path
+
+    Does the function update the search space.
+    """
+
+    from searchspace.searchspace import SearchSpace
+    search_space = SearchSpace()
+
+    path_x = 13.1
+    path_y = 12.0
+    path_depth = 14.5
+    sensor_value = 4
+    sensor_gain = 10
+
+    assert not search_space._cubes
+
+    search_space.record_auv_path(
+        path_x,
+        path_y,
+        path_depth,
+        sensor_value,
+        sensor_gain)
+
+    assert len(search_space._cubes) == 1
+    assert (path_x, path_y, path_depth) in search_space._cubes
+
+
+def test_set_search_boundaries():
+    """test_set_search_boundaries
+
+    Set the boundaries of the search space.
+    """
+
+    from searchspace.searchspace import SearchSpace
+    from auv_bonus_xprize.settings import config
+
+    search_space = SearchSpace()
+
+    boundary_buffer = 10.0
+    depth = 14.0
+
+    config['search']['boundary_buffer_meters'] = str(boundary_buffer)
+    config['starting']['northwest_utm'] = '602978,4127097'
+    config['starting']['northeast_utm'] = '603978,4127097'
+    config['starting']['southeast_utm'] = '603978,4126097'
+    config['starting']['southwest_utm'] = '602978,4126097'
+    config['search']['max_depth_meters'] = str(depth)
+
+    search_space.set_search_boundaries()
+
+    assert search_space._perimeter_length > 0
+    assert search_space._perimeter_length == 3920
+
+
 def test_next_path_waypoint(monkeypatch, waypoint_list):
 
     from searchspace.searchspace import SearchSpace
 
-    search_space = SearchSpace(0, 0)
+    search_space = SearchSpace()
 
     test_search_path = dict()
     test_search_path['Path'] = waypoint_list
@@ -55,7 +128,7 @@ def test_define_search_path(waypoint_list):
     Define the waypoints which comprise a search path.
     """
     from searchspace.searchspace import SearchSpace
-    search_space = SearchSpace(0, 0)
+    search_space = SearchSpace()
 
     search_space.define_search_path(path_name='Test',
                                     waypoint_list=waypoint_list)

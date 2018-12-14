@@ -1,1 +1,5 @@
+https://www.raspberrypi.org/documentation/faqs/#hardware
+
+https://www.raspberrypi.org/documentation/hardware/raspberrypi/gpio/README.md
+
 https://raspberrypi.stackexchange.com/questions/42929/how-to-safely-switch-off-the-raspberry-pi

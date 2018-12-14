@@ -3,7 +3,7 @@
 """
 from math import cos, radians
 from auv_bonus_xprize.settings import config
-from searchspace.geometry import Point
+from searchspace.geometry import Point, Line, Polygon
 
 
 class NavConverter(object):
@@ -132,6 +132,8 @@ def lat_degrees_to_meters(lat_degrees, at_this_latitude):
 
     Convert the decimal latitude degrees argument to meters,
     at the given latitude.
+
+    http://www.csgnetwork.com/degreelenllavcalc.html
     """
 
     if (lat_degrees > 10.0 or
