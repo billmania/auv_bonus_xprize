@@ -252,7 +252,7 @@ class SearchSpace(object):
 
             if track_passes > 1:
                 track_depth = _next_track_depth(track_depth)
-                search_path.append(waypt.as_tuple() + (track_depth,))
+                search_path.append(waypt.as_tuple() + (track_depth, None))
 
             track_passes = track_passes - 1
 
