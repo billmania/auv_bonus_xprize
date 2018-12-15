@@ -4,7 +4,7 @@ The functionality for the search space in which the AUV
 operates.
 """
 
-from math import atan2
+from math import atan2, isclose
 
 from auv_bonus_xprize.settings import config
 from searchspace.geometry import Point, Line, Polygon
@@ -96,7 +96,7 @@ class SearchSpace(object):
                                       intersect_pt))
             distances.sort()
 
-            for intersect_pt_idx in [1, 2]:
+            for intersect_pt_idx in range(1, len(distances)):
                 intersect_pt = distances[intersect_pt_idx][1]
                 if not self._inside_the_boundaries(intersect_pt):
                     continue
@@ -105,11 +105,15 @@ class SearchSpace(object):
                     intersect_pt.y - starting_waypt.y,
                     intersect_pt.x - starting_waypt.x)
 
-                if angle_to_intersect_pt != compass_heading_to_polar_angle(
-                      track_heading):
+                if not isclose(angle_to_intersect_pt,
+                               compass_heading_to_polar_angle(
+                                   track_heading),
+                               rel_tol=1e-5):
                     track_heading = (track_heading + 180) % 360
 
                 return track_heading, intersect_pt
+
+            raise Exception('No waypoint is inside the boundaries')
         else:
             raise Exception('Starting point is outside the boundaries')
 
