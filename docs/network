@@ -1,5 +1,5 @@
 
-To configure network interfaces from the command line with nmcli:
+To configure RaspPi network interfaces from the command line with nmcli:
 https://people.freedesktop.org/~lkundrak/nm-docs/nmcli-examples.html
 
 nmcli con add con-name "static-ens32" ifname ens32 type ethernet ip4 xxx.xxx.120.44/24 gw4 xxx.xxx.120.1
@@ -16,8 +16,97 @@ To configure WiFi:
 
 https://nullr0ute.com/2016/09/connect-to-a-wireless-network-using-command-line-nmcli/
 
+nmcli device
 nmcli device wifi rescan
 nmcli device wifi list
 nmcli device wifi connect ${SSID} password ${PSK}
+nmcli device wifi connect RTASUUV password XXXXXXXXX
+nmcli con add con-name "static-wifi" ifname wlan0 type wifi ip4 192.168.1.211/24 
 nmcli connection
+
+nmcli con up "static-enxb" iface enxb827ebfa78d6
+
+RaspPi in UUV has WiFi address 192.168.0.100
+
+root@QuestPi:~# ip address show dev enxb827ebfa78d6
+2: enxb827ebfa78d6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast0
+    link/ether b8:27:eb:fa:78:d6 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.1.211/24 brd 10.0.1.255 scope global enxb827ebfa78d6
+       valid_lft forever preferred_lft forever
+    inet6 fe80::64da:808c:6902:cb88/64 scope link 
+       valid_lft forever preferred_lft forever
+
+root@QuestPi:~# ip address show dev wlan0
+3: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP 0
+    link/ether b8:27:eb:af:2d:83 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.0.100/24 brd 192.168.0.255 scope global wlan0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::679b:1d62:8d0a:5117/64 scope link 
+       valid_lft forever preferred_lft forever
+
+root@QuestPi:~# ip route show
+default via 192.168.0.1 dev wlan0  proto static  metric 600 
+10.0.1.0/24 dev enxb827ebfa78d6  proto kernel  scope link  src 10.0.1.211  metric 100 
+169.254.0.0/16 dev wlan0  scope link  metric 1000 
+192.168.0.0/24 dev wlan0  proto kernel  scope link  src 192.168.0.100  metric 600 
+
+
+wifi on the bbb
+--------------------------------------------------------------------
+
+uuuv@beaglebone:~$ ip address show dev eth0
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 40:bd:32:c6:2b:cb brd ff:ff:ff:ff:ff:ff
+    inet 10.0.1.210/24 brd 10.0.1.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42bd:32ff:fec6:2bcb/64 scope link 
+       valid_lft forever preferred_lft forever
+uuuv@beaglebone:~$ ip address show dev wlan0
+5: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 9c:ef:d5:fc:2f:62 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.0.210/24 brd 192.168.0.255 scope global wlan0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::9eef:d5ff:fefc:2f62/64 scope link 
+       valid_lft forever preferred_lft forever
+
+uuuv@beaglebone:~$ ip route list                                                                 
+default via 192.168.0.1 dev wlan0 metric 1 
+10.0.1.0/24 dev eth0 proto kernel scope link src 10.0.1.210 
+192.168.0.0/24 dev wlan0 proto kernel scope link src 192.168.0.210 
+192.168.6.0/30 dev usb1 proto kernel scope link src 192.168.6.2 linkdown 
+192.168.7.0/30 dev usb0 proto kernel scope link src 192.168.7.2 linkdown 
+
+panda wireless 148f:5372 ralink technology, corp. rt5372 wireless adaptr
+
+  preferred_lft forever   
+
+# Testing USB WiFi dongle                                                       
+auto wlan0                                                                      
+allow-hotplug wlan0                                                             
+iface wlan0 inet dhcp                                                           
+   wpa-driver wext                                                              
+   wpa-ap-scan 1                                                                
+   wpa-key-mgmt WPA-PSK                                                         
+   wpa-ssid "ManiaLabs1"                                                        
+   wpa-psk "XXXXXXXXXXX"    
+
+The device is hot-pluggable, but also requires around a minute to 
+connect to the network at home.
+
+Both Panda wireless devices will connect to ManiaLabs1 using my BBB,
+hotplugging, and waiting up to two minutes.
+
+tried two known working USB-WiFi Panda Wireless dongles in the original
+BBB, both the onboard USB port and the glued-on extension. neither
+appear on the USB and both generate a complaint on the serial console.
+
+replaced original BBB with Bill's, wired to RaspPi Ethernet, USB-WiFi
+dongle on BBB USB port.
+
+boots OK, recognizes USB-WiFi
+still no OLED
+
+to route traffic from Bill's desktop to the BBB and RaspPi through
+ the Riptide-AP:
+ip route add 192.168.0.0/24 via 192.168.1.245 dev enp5s0
 
