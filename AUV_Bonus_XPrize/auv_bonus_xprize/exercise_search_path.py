@@ -1,5 +1,3 @@
-import pdb
-
 from auv_bonus_xprize.settings import config
 from searchspace.searchspace import SearchSpace
 
@@ -9,7 +7,6 @@ ss.set_search_boundaries()
 
 ss.set_current_velocity()
 
-pdb.set_trace()
 search_path = ss.calculate_search_path()
 
 for waypt in search_path:

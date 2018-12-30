@@ -47,6 +47,9 @@ class AuvMOOS(pymoos.comms):
 
     def _on_connect(self):
         """_on_connect()
+
+        wait_until_connected(self: pymoos.base_sync_comms, n_ms: int) -> bool
+        is_connected(self: pymoos.base_sync_comms) -> bool
         """
 
         logging.info('Connected to MOOSDB at {0}:{1} named {2}'.format(
@@ -64,11 +67,24 @@ class AuvMOOS(pymoos.comms):
 
         for msg in self.fetch():
             if msg.key() in self._variables_list:
+                if msg.is_double():
+                    variable_value = msg.double()
+                elif msg.is_string():
+                    variable_value = msg.string()
+                elif msg.is_binary():
+                    variable_value = msg.binary()
+                else:
+                    logging.warning(
+                        'Variable {0} had unrecognized data type'.format(
+                            msg.key()))
+                    continue
+
                 logging.debug('{0} data: {1}'.format(
                     msg.key(),
-                    msg.double()))
+                    variable_value))
+
                 if self._data_callback:
-                    self._data_callback(msg.key(), msg.double())
+                    self._data_callback(msg.key(), variable_value)
 
         return True
 

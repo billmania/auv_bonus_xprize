@@ -2,16 +2,6 @@
 To configure RaspPi network interfaces from the command line with nmcli:
 https://people.freedesktop.org/~lkundrak/nm-docs/nmcli-examples.html
 
-nmcli con add con-name "static-ens32" ifname ens32 type ethernet ip4 xxx.xxx.120.44/24 gw4 xxx.xxx.120.1
-
-nmcli con mod "static-ens32" ipv4.dns "xxx.xxx.120.1,8.8.8.8"
-
-nmcli con up "static-ens32" iface ens32
-
-nmcli con del "old-name"
-
-
-
 To configure WiFi:
 
 https://nullr0ute.com/2016/09/connect-to-a-wireless-network-using-command-line-nmcli/
@@ -19,22 +9,8 @@ https://nullr0ute.com/2016/09/connect-to-a-wireless-network-using-command-line-n
 nmcli device
 nmcli device wifi rescan
 nmcli device wifi list
-nmcli device wifi connect ${SSID} password ${PSK}
 nmcli device wifi connect RTASUUV password XXXXXXXXX
-nmcli con add con-name "static-wifi" ifname wlan0 type wifi ip4 192.168.1.211/24 
 nmcli connection
-
-nmcli con up "static-enxb" iface enxb827ebfa78d6
-
-RaspPi in UUV has WiFi address 192.168.0.100
-
-root@QuestPi:~# ip address show dev enxb827ebfa78d6
-2: enxb827ebfa78d6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast0
-    link/ether b8:27:eb:fa:78:d6 brd ff:ff:ff:ff:ff:ff
-    inet 10.0.1.211/24 brd 10.0.1.255 scope global enxb827ebfa78d6
-       valid_lft forever preferred_lft forever
-    inet6 fe80::64da:808c:6902:cb88/64 scope link 
-       valid_lft forever preferred_lft forever
 
 root@QuestPi:~# ip address show dev wlan0
 3: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP 0
@@ -42,6 +18,17 @@ root@QuestPi:~# ip address show dev wlan0
     inet 192.168.0.100/24 brd 192.168.0.255 scope global wlan0
        valid_lft forever preferred_lft forever
     inet6 fe80::679b:1d62:8d0a:5117/64 scope link 
+       valid_lft forever preferred_lft forever
+
+ETH_DEVICE="enxb827ebfa78d6"
+nmcli con add con-name "static-eth0" ifname ${ETH_DEVICE} type ethernet ip4 10.0.1.211/24
+
+root@QuestPi:~# ip address show dev enxb827ebfa78d6
+2: enxb827ebfa78d6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast0
+    link/ether b8:27:eb:fa:78:d6 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.1.211/24 brd 10.0.1.255 scope global enxb827ebfa78d6
+       valid_lft forever preferred_lft forever
+    inet6 fe80::64da:808c:6902:cb88/64 scope link 
        valid_lft forever preferred_lft forever
 
 root@QuestPi:~# ip route show
@@ -63,7 +50,7 @@ uuuv@beaglebone:~$ ip address show dev eth0
        valid_lft forever preferred_lft forever
 uuuv@beaglebone:~$ ip address show dev wlan0
 5: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
-    link/ether 9c:ef:d5:fc:2f:62 brd ff:ff:ff:ff:ff:ff
+    link/ether 9c:ef:d5:fd:31:8c brd ff:ff:ff:ff:ff:ff
     inet 192.168.0.210/24 brd 192.168.0.255 scope global wlan0
        valid_lft forever preferred_lft forever
     inet6 fe80::9eef:d5ff:fefc:2f62/64 scope link 

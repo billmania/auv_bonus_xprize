@@ -1,19 +1,22 @@
 from time import sleep
 
-from auv_bonus_xprize.settings import config
 from auv.auv import Auv
 
 """
+from RiptideMicroUUVInterface.cpp
+
 DESIRED_RUDDER integer degrees
 DESIRED_ELEVATOR integer degrees
 DESIRED_DEPTH
 DESIRED_HEADING
 DESIRED_SPEED
-RT_THRUST_SPEED integer 0 to 3-ish
+
 """
 
-thrust = 3
+speed_m_per_s = 0.5
+speed_variable = 'DESIRED_SPEED'
 base_angle = 10
+
 
 def wiggle_controls():
 
@@ -31,33 +34,36 @@ def wiggle_controls():
                                           -1)
         sleep(1.0)
 
-auv = Auv(x=float(config['starting']['latitude']),
-          y=float(config['starting']['longitude']),
-          depth=0.0,
-          heading=int(config['starting']['heading']))
+auv = Auv()
 
 while not auv.auv_control.connected:
     print('Waiting to connect')
     sleep(1.0)
 
-wiggle_controls()
+# wiggle_controls()
 
-print('Centering controls')
-auv.auv_control._publish_variable('DESIRED_ELEVATOR',
-                                  0,
-                                  -1)
-auv.auv_control._publish_variable('DESIRED_RUDDER',
-                                  0,
-                                  -1)
+# auv.auv_control._publish_variable('ACTIVE_START',
+#                                   'true',
+#                                   -1)
+# auv.auv_control._publish_variable('TARDY_HELM_THRESHOLD',
+#                                   10.0,
+#                                   -1)
+# auv.auv_control._publish_variable('TARDY_NAV_THRESHOLD',
+#                                   10.0,
+#                                   -1)
 
-print('Setting thrust to {0}'.format(thrust))
-auv.auv_control._publish_variable('RT_THRUST_SPEED',
-                                  thrust,
-                                  -1)
-sleep(1.0)
+print('Setting {0} to {1}'.format(speed_variable, speed_m_per_s))
+while True:
+    auv.auv_control._publish_variable(
+        speed_variable,
+        speed_m_per_s,
+        -1)
+    sleep(0.1)
 
-print('Stopped')
-auv.auv_control._publish_variable('RT_THRUST_SPEED',
-                                  0,
-                                  -1)
+sleep(5.0)
+
+# print('Stopped')
+# auv.auv_control._publish_variable(speed_variable,
+#                                   0.0,
+#                                   -1)
 print('Done')

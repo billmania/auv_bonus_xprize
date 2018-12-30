@@ -1,0 +1,33 @@
+There appear to be four relevant variables for controlling the vehicle:
+DESIRED_HEADING
+DESIRED_SPEED
+DESIRED_DEPTH
+DESIRED_PITCH
+
+DESIRED_SPEED is published to control the speed.
+
+It's value is stored by pMarinePID in the variable m_desired_speed.
+
+m_desired_speed is combined with m_current_speed, m_current_thrust,
+and m_max_thrust to produce thrust.
+
+ACTIVE_START is stored in m_has_control and must be True for
+pMarinePID to publish a non-zero DESIRED_THRUST, along with
+several other variables and values.
+
+DESIRED_HEADING and DESIRED_SPEED must be received regularly and
+are used to update m_time_of_last_helm_msg. Any NAV_ message must
+be received regularly too, and is used to update m_time_of_last_nav_msg.
+
+Both m_time_of_last_helm_msg and m_time_of_last_nav_msg must be
+within TARDY_*_THRESHOLD for pMarinePID to publish a non-zero
+DESIRED_THRUST.
+
+Even after publishing True for ACTIVE_START and confirming the
+rest of the system is publishing some NAV_ messages and publishing
+DESIRED_SPEED every tenth of a second, pMarinePID continues to
+publish 0.0 for DESIRED_THRUST.
+
+If I kill pMarinePID and publish DESIRED_THRUST instead of DESIRED_SPEED,
+I can spin the prop all day long.
+

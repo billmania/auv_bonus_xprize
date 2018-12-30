@@ -1,0 +1,20 @@
+
+
+[67990.862013] Out of memory: Kill process 22680 (MOOSDB) score 874 or sacrifice child
+[67990.897772] Killed process 22680 (MOOSDB) total-vm:719644kB, anon-rss:432636kB, file-rss:104kB, shmem-rss:0kB
+
+
+There's a file named I2CStressTest.cpp in the Riptide repo.
+
+
+[143917.032842] omap_i2c 4802a000.i2c: controller timed out
+[144090.160752] omap_i2c 4802a000.i2c: controller timed out
+[144314.972136] omap_i2c 4802a000.i2c: controller timed out
+[144988.219076] omap_i2c 4802a000.i2c: controller timed out
+[145013.468212] omap_i2c 4802a000.i2c: controller timed out
+[145054.366039] omap_i2c 4802a000.i2c: controller timed out
+[145113.280914] omap_i2c 4802a000.i2c: controller timed out
+[145562.901982] omap_i2c 4802a000.i2c: controller timed out
+[145999.338658] omap_i2c 4802a000.i2c: controller timed out
+[146767.566757] omap_i2c 4802a000.i2c: controller timed out
+
