@@ -18,3 +18,13 @@ There's a file named I2CStressTest.cpp in the Riptide repo.
 [145999.338658] omap_i2c 4802a000.i2c: controller timed out
 [146767.566757] omap_i2c 4802a000.i2c: controller timed out
 
+
+original BBB from Riptide with yellow USB cable:
+neither the USB cable nor the USB port are functional
+
+BBB labeled "Bill":
+one of the Tx or Rx for the eth0 port is non-functional
+
+BBB labeled "Bill 3":
+installed in UUV on 5 Jan 2019, fully functional, no
+modifications
