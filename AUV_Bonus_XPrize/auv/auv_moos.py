@@ -59,6 +59,17 @@ class AuvMOOS(pymoos.comms):
 
         self._register_variables()
 
+        self.publish_variable('MOOS_MANUAL_OVERRIDE',
+                              'FALSE',
+                              -1)
+        #
+        # The next variable compensates for some extremely sloppy
+        # MOOS code.
+        #
+        self.publish_variable('MOOS_MANUAL_OVERIDE',
+                              'FALSE',
+                              -1)
+
         self.connected = True
 
     def _on_new_mail(self):
@@ -95,11 +106,11 @@ class AuvMOOS(pymoos.comms):
             logging.debug('registering MOOS variable {0}'.format(variable))
             self.register(variable, 0)
 
-    def _publish_variable(self,
-                          variable_name,
-                          variable_value,
-                          negative_one):
-        """_publish_variable()
+    def publish_variable(self,
+                         variable_name,
+                         variable_value,
+                         negative_one):
+        """publish_variable()
 
         Publish the named variable with the provided value. The type of the
         value is expected to have been already set appropriately.

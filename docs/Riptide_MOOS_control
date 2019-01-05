@@ -1,33 +1,39 @@
-There appear to be four relevant variables for controlling the vehicle:
-DESIRED_HEADING
-DESIRED_SPEED
-DESIRED_DEPTH
-DESIRED_PITCH
+From Dani at Riptide on 3 Jan 2019. 857 654 8693
 
-DESIRED_SPEED is published to control the speed.
+There are three main variables for controlling the UUV.
+They must be published together:
 
-It's value is stored by pMarinePID in the variable m_desired_speed.
+DESIRED_HEADING - true degrees
+DESIRED_SPEED - meters per second
+DESIRED_DEPTH - meters
 
-m_desired_speed is combined with m_current_speed, m_current_thrust,
-and m_max_thrust to produce thrust.
+and then two other variables must be set to False,
+to enable DESIRED_SPEED above:
 
-ACTIVE_START is stored in m_has_control and must be True for
-pMarinePID to publish a non-zero DESIRED_THRUST, along with
-several other variables and values.
+MOOS_MANUAL_OVERRIDE - False
+MOOS_MANUAL_OVERIDE - False
 
-DESIRED_HEADING and DESIRED_SPEED must be received regularly and
-are used to update m_time_of_last_helm_msg. Any NAV_ message must
-be received regularly too, and is used to update m_time_of_last_nav_msg.
+The pose information about the UUV can be extracted from:
 
-Both m_time_of_last_helm_msg and m_time_of_last_nav_msg must be
-within TARDY_*_THRESHOLD for pMarinePID to publish a non-zero
-DESIRED_THRUST.
+NAV_X - the easting
+NAV_Y - the northing
+NAV_HEADING - true degrees
+NAV_DEPTH - meters
+NAV_SPEED - meters per second
 
-Even after publishing True for ACTIVE_START and confirming the
-rest of the system is publishing some NAV_ messages and publishing
-DESIRED_SPEED every tenth of a second, pMarinePID continues to
-publish 0.0 for DESIRED_THRUST.
 
-If I kill pMarinePID and publish DESIRED_THRUST instead of DESIRED_SPEED,
-I can spin the prop all day long.
+In order for the UUV to begin publishing the NAV_
+variables, the following must occur:
+
+1. GPS module functional and publishing GPS_ variables
+2. depth module functional and publishing PS_DEPTH
+3. IMU module functional and publishing IMU_HEADING
+
+When DESIRED_SPEED is set to zero, assume the UUV will
+slowly float to the surface.
+
+Maximum angle on the control fins is 15 degrees.
+
+An estimate of the position error can be found in
+EKF_SIGMA. Both the x and y value should be less than 1.
 

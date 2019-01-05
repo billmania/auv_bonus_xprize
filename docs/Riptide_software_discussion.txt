@@ -1,0 +1,70 @@
+Followup to message sent to Dean and Dani on 21 December.
+
+1. If I want to write my own software to command the UUV, must I
+terminate any MOOS or Riptide processes?
+
+    pAntler
+
+    MOOSDB
+
+    pLogger
+
+    iRiptideMicroUUV
+    
+    pNav
+
+    pMarinePID
+
+    uRiptideOLEDDisplay
+
+    iRiptideSpartonIMU
+
+    pRiptideMOOSMonitor
+
+2. How does the operation of the UUV change when it submerges and
+loses GPS fix?  Are there position and orientation variables for
+status on the surface and different variables to use when
+submerged?
+
+3. From which variables should I get the current UTM position,
+depth, heading, and speed when submerged? Any difference between
+the prop spinning and stopped? Are any of these normalized to the
+origin?
+
+4. Which operational parameters does pMarinePID control?
+    Speed, heading, depth?
+
+5. Which variable sets the UUV forward speed, datatype, units,
+max value? Required publish rate? Dependent on any other
+variables?
+
+6. Which variable sets the UUV heading, datatype, units, true or
+magnetic?
+
+7. Which variable sets the UUV depth, datatype, units?
+
+8. Does the UUV calculate estimated position error when
+submerged? Is there an indication of the need to reacquire GPS
+fix?
+
+9. Any Riptide logic which will automatically release the drop
+weight?
+
+10. What should I expect from the UUV's depth when the prop
+isn't spinning?
+
+11. Which variables indicate a fault with each Riptide UUV
+subsystem?
+
+    IRIPTIDEMICROUUV_STATUS
+    MOOS_SYSTEM
+
+12. Using the browser console and the Checkout page, what should
+I expect for max rotation angle of each fin?
+
+13. Which variable publishes the distance above the bottom,
+datatype, units? What's the max usable range?
+
+14. Which variable(s) give battery status, datatype, units?
+What's the range of values?
+

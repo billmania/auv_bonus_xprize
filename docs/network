@@ -38,8 +38,12 @@ default via 192.168.0.1 dev wlan0  proto static  metric 600
 192.168.0.0/24 dev wlan0  proto kernel  scope link  src 192.168.0.100  metric 600 
 
 
-wifi on the bbb
+network on the bbb
 --------------------------------------------------------------------
+ip route add default via 192.168.0.1 dev wlan0
+  post-up route add default gw 192.168.0.1 metric 1
+  post-down route del default gw 192.168.0.1 metric 1
+
 
 uuuv@beaglebone:~$ ip address show dev eth0
 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
@@ -48,6 +52,7 @@ uuuv@beaglebone:~$ ip address show dev eth0
        valid_lft forever preferred_lft forever
     inet6 fe80::42bd:32ff:fec6:2bcb/64 scope link 
        valid_lft forever preferred_lft forever
+
 uuuv@beaglebone:~$ ip address show dev wlan0
 5: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
     link/ether 9c:ef:d5:fd:31:8c brd ff:ff:ff:ff:ff:ff

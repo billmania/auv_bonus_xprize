@@ -23,13 +23,13 @@ def wiggle_controls():
     print('Wiggling')
     for angle in [-(base_angle), 0, base_angle]:
         print('Elevator: {0}'.format(angle))
-        auv.auv_control._publish_variable('DESIRED_ELEVATOR',
+        auv.auv_control.publish_variable('DESIRED_ELEVATOR',
                                           angle,
                                           -1)
         sleep(1.0)
     for angle in [-(base_angle), 0, base_angle]:
         print('Rudder: {0}'.format(angle))
-        auv.auv_control._publish_variable('DESIRED_RUDDER',
+        auv.auv_control.publish_variable('DESIRED_RUDDER',
                                           angle,
                                           -1)
         sleep(1.0)
@@ -40,21 +40,9 @@ while not auv.auv_control.connected:
     print('Waiting to connect')
     sleep(1.0)
 
-# wiggle_controls()
-
-# auv.auv_control._publish_variable('ACTIVE_START',
-#                                   'true',
-#                                   -1)
-# auv.auv_control._publish_variable('TARDY_HELM_THRESHOLD',
-#                                   10.0,
-#                                   -1)
-# auv.auv_control._publish_variable('TARDY_NAV_THRESHOLD',
-#                                   10.0,
-#                                   -1)
-
 print('Setting {0} to {1}'.format(speed_variable, speed_m_per_s))
 while True:
-    auv.auv_control._publish_variable(
+    auv.auv_control.publish_variable(
         speed_variable,
         speed_m_per_s,
         -1)
@@ -62,8 +50,4 @@ while True:
 
 sleep(5.0)
 
-# print('Stopped')
-# auv.auv_control._publish_variable(speed_variable,
-#                                   0.0,
-#                                   -1)
 print('Done')

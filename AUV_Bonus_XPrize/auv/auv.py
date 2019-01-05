@@ -20,6 +20,7 @@ def variables_list():
     variables.append(config['variables']['northing_y'])
     variables.append(config['variables']['depth'])
     variables.append(config['variables']['heading'])
+    variables.append(config['variables']['speed'])
 
     return variables
 
@@ -58,27 +59,44 @@ class Auv(object):
 
         self._auv_data[moos_variable_name] = moos_variable_value
 
-    def move_to_waypoint(self, waypoint):
-        """move_to_waypoint()
+    def move_toward_waypoint(self, waypoint):
+        """move_toward_waypoint()
 
-        Set the prop_velocity, the elevator, and the rudder
-        in order to move the AUV from its current position
-        to the waypoint.
+        Compare the current position of the AUV to the given
+        waypoint. Calculate the distance and the bearing to
+        the waypoint. If either is greater than the tolerance
+        parameters, calculate the appropriate amounts to adjust
+        the heading, depth, and speed of the AUV and effect
+        those adjustments. Return 'MORE' to indicate the AUV
+        is not yet close enough.
+
+        Otherwise, if the AUV is within the tolerances for
+        the waypoint, return 'DONE'.
         """
 
         self._current_waypoint['x'] = waypoint[0]
         self._current_waypoint['y'] = waypoint[1]
         self._current_waypoint['depth'] = waypoint[2]
+        heading = int(waypoint[3])
 
         distance_tolerance = float(config['auv']['distance_tolerance'])
-        while self.distance_to_waypoint() > distance_tolerance:
-            #
-            # Get new prop, elevator, and rudder settings based
-            # on the bearing and range to the waypoint.
-            # Execute those settings in a loop while checking
-            # and recording dye levels.
+        if self.distance_to_waypoint() > distance_tolerance:
+            self.auv_control.publish_variable(
+                config['variables']['set_heading'],
+                heading,
+                -1)
+            self.auv_control.publish_variable(
+                config['variables']['set_depth'],
+                self._current_waypoint['depth'],
+                -1)
+            self.auv_control.publish_variable(
+                config['variables']['set_speed'],
+                config['auv']['max_prop_speed'],
+                -1)
 
-            pass
+            return 'MORE'
+
+        return 'DONE'
 
     def distance_to_waypoint(self):
 
@@ -92,12 +110,11 @@ class Auv(object):
         y = config['variables']['northing_y']
         depth = config['variables']['depth']
 
-        distance = float(0)
-        distance = pow(self._auv_data[x] -
-                       self._current_waypoint['x'], 2)
-        distance += pow(self._auv_data[y] -
-                        self._current_waypoint['y'], 2)
-        distance += pow(self._auv_data[depth] -
-                        self._current_waypoint['depth'], 2)
+        sum_of_squares = pow(self._auv_data[x] -
+                             self._current_waypoint['x'], 2)
+        sum_of_squares += pow(self._auv_data[y] -
+                              self._current_waypoint['y'], 2)
+        sum_of_squares += pow(self._auv_data[depth] -
+                              self._current_waypoint['depth'], 2)
 
-        return sqrt(distance)
+        return sqrt(sum_of_squares)
