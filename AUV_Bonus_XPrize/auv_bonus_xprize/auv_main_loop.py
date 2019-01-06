@@ -2,6 +2,7 @@
 """
 
 import logging
+from time import time, sleep
 from enum import Enum, unique
 from auv_bonus_xprize.settings import config
 from auv.auv import Auv
@@ -29,18 +30,12 @@ def search_for_plume(auv, search_space):
 
     search_path = search_space.calculate_search_path()
     for waypt in search_path:
-        distance_to_waypt = auv.distance_to_waypt(waypt)
-        depth_to_waypt = auv.depth_to_waypt(waypt)
-
-        if (distance_to_waypt < float(config['auv']['distance_tolerance']) and
-            depth_to_waypt > float(config['auv']['depth_tolerance'])):
-
-            auv.move_to_depth(waypt)
-
-        while distance_to_waypt > float(config['auv']['distance_tolerance']):
-            auv.move_to_waypt(waypt)
-
-    return AUVState.FollowPlume
+        set_loop_hz(float(config['DEFAULT']['main_loop_hz']))
+        while auv.move_toward_waypoint(waypt) == 'MORE':
+            watchdog()
+            if auv.found_plume():
+                return AUVState.FollowPlume
+            loop_hz()
 
 
 def follow_plume(auv, search_space):
@@ -83,6 +78,53 @@ def abort_mission(auv, search_space):
     return AUVState.AbortMission
 
 
+def watchdog():
+    """watchdog()
+
+    Reset the watchdog timer.
+    """
+
+    try:
+        elapsed_time = time() - watchdog.reset_time
+
+    except AttributeError:
+        elapsed_time = 0.0
+
+    logging.debug("Resetting the watchdog timer after {0}".format(
+        elapsed_time) +
+                  "seconds")
+
+    # TODO: Implement the watchdog reset logic
+
+    watchdog.reset_time = time()
+
+
+def set_loop_hz(desired_hz):
+    """set_loop_hz()
+
+    Set the period of a loop.
+    """
+
+    loop_hz.seconds_per_loop = 1.0 / desired_hz
+    loop_hz.start_time = time()
+
+
+def loop_hz():
+    """loop_hz()
+
+    Pause at the end of a loop to force the
+    period of the loop.
+    """
+
+    pause = loop_hz.start_time + loop_hz.seconds_per_loop - time()
+    if pause < 0:
+        logging.warning('Loop frequency set too low')
+    else:
+        sleep(pause)
+
+    loop_hz.start_time = time()
+
+
 state_function = dict()
 state_function[AUVState.SearchForPlume] = search_for_plume
 state_function[AUVState.FollowPlume] = follow_plume
@@ -98,32 +140,34 @@ def main_loop():
     The main logic loop for the AUV control system.
     """
 
-    logging.debug('Instantiating the Auv() object')
-    auv = Auv()
     logging.debug('Instantiating the SearchSpace() object')
+    watchdog()
+    search_space = SearchSpace()
+    search_space.set_search_boundaries()
+    search_space.set_current_velocity()
 
-    search_space = SearchSpace(
-        auv_latitude=float(config['starting']['latitude']),
-        auv_longitude=float(config['starting']['longitude'])
-    )
-    search_space.set_search_boundaries(
-        northern_latitude=float(config['starting']['northern_latitude']),
-        southern_latitude=float(config['starting']['southern_latitude']),
-        eastern_longitude=float(config['starting']['eastern_longitude']),
-        western_longitude=float(config['starting']['western_longitude']))
-    search_space.set_current_velocity(
-        current_set=float(config['starting']['set']),
-        current_drift=float(config['starting']['drift']))
-
+    logging.debug('Instantiating the Auv() object')
+    watchdog()
+    auv = Auv()
+    logging.debug('Waiting until the AUV is connected')
+    while not auv.auv_control.connected:
+        sleep(1.0)
+    logging.debug('AUV is connected')
 
     system_state = AUVState.SearchForPlume
 
+    logging.debug('Starting the state loop')
+    watchdog()
     while system_state not in [AUVState.AbortMission,
                                AUVState.ReportResults]:
+
+        if auv.data_not_updated():
+            logging.error('Data from AUV not up to date')
 
         system_state = state_function[system_state](
             auv,
             search_space)
+
 
     state_function[system_state](auv, search_space)
 

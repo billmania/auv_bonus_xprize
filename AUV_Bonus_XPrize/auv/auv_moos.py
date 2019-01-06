@@ -57,20 +57,24 @@ class AuvMOOS(pymoos.comms):
             self.port,
             self.name))
 
-        self._register_variables()
+        try:
+            self._register_variables()
+    
+            self.publish_variable('MOOS_MANUAL_OVERRIDE',
+                                  'FALSE',
+                                  -1)
+            #
+            # The next variable compensates for some extremely sloppy
+            # MOOS code.
+            #
+            self.publish_variable('MOOS_MANUAL_OVERIDE',
+                                  'FALSE',
+                                  -1)
 
-        self.publish_variable('MOOS_MANUAL_OVERRIDE',
-                              'FALSE',
-                              -1)
-        #
-        # The next variable compensates for some extremely sloppy
-        # MOOS code.
-        #
-        self.publish_variable('MOOS_MANUAL_OVERIDE',
-                              'FALSE',
-                              -1)
+            self.connected = True
 
-        self.connected = True
+        except Exception as e:
+            logging.error('Exception {0} in _on_connect()'.format(e))
 
     def _on_new_mail(self):
         """_on_new_mail()
@@ -90,12 +94,13 @@ class AuvMOOS(pymoos.comms):
                             msg.key()))
                     continue
 
-                logging.debug('{0} data: {1}'.format(
-                    msg.key(),
-                    variable_value))
-
                 if self._data_callback:
-                    self._data_callback(msg.key(), variable_value)
+                    try:
+                        self._data_callback(msg.key(), variable_value)
+
+                    except Exception as e:
+                        logging.error('_on_new_mail() Exception: {0}'.format(
+                            e))
 
         return True
 

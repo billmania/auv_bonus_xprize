@@ -53,7 +53,6 @@ class SearchSpace(object):
         """__init__() - Create an instance of the SearchSpace
         """
         self._cubes = dict()
-        self._search_paths = dict()
 
         self._boundary_polygon = None
         self._northern_boundary = None
@@ -261,27 +260,3 @@ class SearchSpace(object):
             track_passes = track_passes - 1
 
         return search_path
-
-    def define_search_path(self, path_name='Default', waypoint_list=None):
-        """define_search_path()
-
-        Record the ordered waypoints for a named search path.
-        """
-
-        self._search_paths[path_name] = list()
-        for waypoint in waypoint_list:
-            self._search_paths[path_name].append(waypoint)
-
-    def next_path_waypoint(self, path_name='Default'):
-        """next_path_waypoint()
-
-        Return the next waypoint in the named path.
-        """
-
-        if path_name in self._search_paths:
-            if self._search_paths[path_name]:
-                return self._search_paths[path_name].pop(0)
-            else:
-                raise Exception('Path {0} is empty'.format(path_name))
-        else:
-            raise Exception('Path {0} does not exist'.format(path_name))

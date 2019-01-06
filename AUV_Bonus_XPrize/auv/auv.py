@@ -3,7 +3,9 @@
 The functionality for the AUV.
 """
 
+import logging
 from math import sqrt
+from time import time
 from auv_bonus_xprize.settings import config
 from auv.auv_moos import AuvMOOS
 
@@ -50,14 +52,34 @@ class Auv(object):
             variables_list())
         self.auv_control.set_data_callback(self._process_auv_data)
 
+    def data_not_updated(self):
+        """data_not_updated()
+
+        Returns True if the data from MOOS is getting old, which
+        implies there's a problem with communication.
+        """
+
+        return (time() - self._auv_data['DATA_TIMESTAMP']) > float(config['auv']['max_data_delay_secs'])
+
     def _process_auv_data(self, moos_variable_name, moos_variable_value):
         """_process_auv_data()
 
-        The function called by the underlying MOOS system each time new data
-        is received from the AUV.
+        The function called by the underlying MOOS system each
+        time new data is received from the AUV.
         """
 
         self._auv_data[moos_variable_name] = moos_variable_value
+        self._auv_data['DATA_TIMESTAMP'] = time()
+
+    def found_plume(self):
+        """found_plume()
+
+        Sample the dye sensor. If the measurement is above
+        the noise level, record the measurement and return
+        True. Otherwise return False.
+        """
+
+        return False
 
     def move_toward_waypoint(self, waypoint):
         """move_toward_waypoint()
@@ -91,7 +113,7 @@ class Auv(object):
                 -1)
             self.auv_control.publish_variable(
                 config['variables']['set_speed'],
-                config['auv']['max_prop_speed'],
+                float(config['auv']['max_speed']),
                 -1)
 
             return 'MORE'
@@ -110,11 +132,10 @@ class Auv(object):
         y = config['variables']['northing_y']
         depth = config['variables']['depth']
 
-        sum_of_squares = pow(self._auv_data[x] -
-                             self._current_waypoint['x'], 2)
-        sum_of_squares += pow(self._auv_data[y] -
-                              self._current_waypoint['y'], 2)
-        sum_of_squares += pow(self._auv_data[depth] -
-                              self._current_waypoint['depth'], 2)
+        print(self._auv_data[x])
+        print(self._current_waypoint['x'])
+        sum_of_squares = pow(self._auv_data[x] - self._current_waypoint['x'], 2)
+        sum_of_squares += pow(self._auv_data[y] - self._current_waypoint['y'], 2)
+        sum_of_squares += pow(self._auv_data[depth] - self._current_waypoint['depth'], 2)
 
         return sqrt(sum_of_squares)
