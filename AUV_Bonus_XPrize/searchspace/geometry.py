@@ -5,9 +5,46 @@ points, lines, and polygons.
 """
 
 from math import sqrt, radians, cos, sin, pi
+from math import atan, degrees
 import matplotlib.path as mplPath
 
 INFINITE = float("inf")
+
+
+def heading_to_point(point1, point2):
+    """heading_to_point()
+
+    Return the compass heading in degrees from
+    point1 to point2. If the two input points are
+    the same point, return None.
+    """
+
+    if point1 == point2:
+        return None
+
+    if point1.x == point2.x:
+        if point2.y > point1.y:
+            return 0
+        else:
+            return 180
+
+    if point1.y == point2.y:
+        if point2.x > point1.x:
+            return 90
+        else:
+            return 270
+
+    slope = float(point2.y - point1.y) / (point2.x - point1.x)
+    if slope > 0:
+        heading = int(90 - degrees(atan(slope)))
+        if point2.y < point1.y:
+            heading = (heading + 180) % 360
+    else:
+        heading = int(-1 * degrees(atan(slope)) + 90)
+        if point2.y > point1.y:
+            heading = (heading + 180) % 360
+
+    return heading
 
 
 def points_distance(point1, point2):
@@ -16,7 +53,7 @@ def points_distance(point1, point2):
     Calculate the Euclidean distance between point1 and point2.
     """
 
-    if point1 is point2 or (point1.x == point2.x and point1.y == point2.y):
+    if point1 == point2:
         return 0.0
 
     return sqrt((point1.x - point2.x) ** 2 +
@@ -95,6 +132,15 @@ class Point(object):
                 self.quadrant = 'II'
             else:
                 self.quadrant = 'III'
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.x == other.x and self.y == other.y
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def as_tuple(self):
         """as_tuple()

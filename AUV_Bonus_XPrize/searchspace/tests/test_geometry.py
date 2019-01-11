@@ -17,6 +17,55 @@ def vertex_list():
     return vertices
 
 
+def test_points_distance():
+    """test_points_distance()
+    """
+
+    from searchspace.geometry import Point
+    from searchspace.geometry import points_distance
+
+    p1 = Point(1, 1)
+    p2 = Point(1, 15)
+    p3 = Point(1, 1)
+    assert points_distance(p1, p1) == 0.0
+    assert points_distance(p1, p3) == 0.0
+    assert points_distance(p1, p2) == 14.0
+
+
+def test_heading_to_point():
+    """test_heading_to_point()
+    """
+
+    from math import tan
+    from searchspace.geometry import Point
+    from searchspace.geometry import heading_to_point
+
+    p1 = Point(1, 1)
+    p2 = Point(1, 1)
+    assert heading_to_point(p1, p2) is None
+
+    p1 = Point(1, 1)
+    p2 = Point(10, 10)
+    assert heading_to_point(p1, p2) == 45
+
+    p1 = Point(1, 1)
+    p2 = Point(1, 10)
+    assert heading_to_point(p1, p2) == 0
+    assert heading_to_point(p2, p1) == 180
+
+    p1 = Point(1, 1)
+    p2 = Point(-5, 7)
+    assert heading_to_point(p1, p2) == 315
+
+    p1 = Point(1, 1)
+    p2 = Point(10, 1)
+    assert heading_to_point(p1, p2) == 90
+
+    p1 = Point(1, 1)
+    p2 = Point(-5, 1)
+    assert heading_to_point(p1, p2) == 270
+
+
 def test_compass_heading_to_polar_angle():
     """test_compass_heading_to_polar_angle
     """
