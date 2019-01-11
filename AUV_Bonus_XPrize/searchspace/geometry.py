@@ -11,8 +11,8 @@ import matplotlib.path as mplPath
 INFINITE = float("inf")
 
 
-def heading_to_point(point1, point2):
-    """heading_to_point()
+def bearing_to_point(point1, point2):
+    """bearing_to_point()
 
     Return the compass heading in degrees from
     point1 to point2. If the two input points are
@@ -36,15 +36,15 @@ def heading_to_point(point1, point2):
 
     slope = float(point2.y - point1.y) / (point2.x - point1.x)
     if slope > 0:
-        heading = int(90 - degrees(atan(slope)))
+        bearing = int(90 - degrees(atan(slope)))
         if point2.y < point1.y:
-            heading = (heading + 180) % 360
+            bearing = (bearing + 180) % 360
     else:
-        heading = int(-1 * degrees(atan(slope)) + 90)
+        bearing = int(-1 * degrees(atan(slope)) + 90)
         if point2.y > point1.y:
-            heading = (heading + 180) % 360
+            bearing = (bearing + 180) % 360
 
-    return heading
+    return bearing
 
 
 def points_distance(point1, point2):

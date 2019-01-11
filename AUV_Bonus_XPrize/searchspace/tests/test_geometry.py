@@ -32,38 +32,38 @@ def test_points_distance():
     assert points_distance(p1, p2) == 14.0
 
 
-def test_heading_to_point():
-    """test_heading_to_point()
+def test_bearing_to_point():
+    """test_bearing_to_point()
     """
 
     from math import tan
     from searchspace.geometry import Point
-    from searchspace.geometry import heading_to_point
+    from searchspace.geometry import bearing_to_point
 
     p1 = Point(1, 1)
     p2 = Point(1, 1)
-    assert heading_to_point(p1, p2) is None
+    assert bearing_to_point(p1, p2) is None
 
     p1 = Point(1, 1)
     p2 = Point(10, 10)
-    assert heading_to_point(p1, p2) == 45
+    assert bearing_to_point(p1, p2) == 45
 
     p1 = Point(1, 1)
     p2 = Point(1, 10)
-    assert heading_to_point(p1, p2) == 0
-    assert heading_to_point(p2, p1) == 180
+    assert bearing_to_point(p1, p2) == 0
+    assert bearing_to_point(p2, p1) == 180
 
     p1 = Point(1, 1)
     p2 = Point(-5, 7)
-    assert heading_to_point(p1, p2) == 315
+    assert bearing_to_point(p1, p2) == 315
 
     p1 = Point(1, 1)
     p2 = Point(10, 1)
-    assert heading_to_point(p1, p2) == 90
+    assert bearing_to_point(p1, p2) == 90
 
     p1 = Point(1, 1)
     p2 = Point(-5, 1)
-    assert heading_to_point(p1, p2) == 270
+    assert bearing_to_point(p1, p2) == 270
 
 
 def test_compass_heading_to_polar_angle():

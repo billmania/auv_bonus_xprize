@@ -8,6 +8,7 @@ from math import sqrt
 from time import time
 from auv_bonus_xprize.settings import config
 from auv.auv_moos import AuvMOOS
+from searchspace.geometry import bearing_to_point, Point
 
 
 def variables_list():
@@ -99,13 +100,18 @@ class Auv(object):
         self._current_waypoint['x'] = waypoint[0]
         self._current_waypoint['y'] = waypoint[1]
         self._current_waypoint['depth'] = waypoint[2]
-        heading = int(waypoint[3])
+        _ = int(waypoint[3])
 
-        distance_tolerance = float(config['auv']['distance_tolerance'])
-        if self.distance_to_waypoint() > distance_tolerance:
+        if self.distance_to_waypoint() > float(config['auv']['distance_tolerance']):
+            logging.debug('Moving toward the waypoint')
+            bearing = bearing_to_point(
+                Point(self._auv_data[config['variables']['easting_x']],
+                      self._auv_data[config['variables']['northing_y']]),
+                Point(self._current_waypoint['x'],
+                      self._current_waypoint['y']))
             self.auv_control.publish_variable(
                 config['variables']['set_heading'],
-                heading,
+                bearing,
                 -1)
             self.auv_control.publish_variable(
                 config['variables']['set_depth'],
@@ -118,13 +124,31 @@ class Auv(object):
 
             return 'MORE'
 
-        return 'DONE'
+        elif (abs(self._current_waypoint['depth'] -
+                    self._auv_data[config['variables']['depth']]) >
+                float(config['auv']['depth_tolerance'])):
+            logging.debug('Moving toward the depth')
+
+            self.auv_control.publish_variable(
+                config['variables']['set_depth'],
+                self._current_waypoint['depth'],
+                -1)
+            self.auv_control.publish_variable(
+                config['variables']['set_speed'],
+                float(config['auv']['depth_speed']),
+                -1)
+
+            return 'MORE'
+
+        else:
+            logging.debug('Reached the waypoint and depth')
+            return 'DONE'
 
     def distance_to_waypoint(self):
 
         """distance_to_waypoint()
 
-        Calculate the straight-line-distance between the AUV's
+        Calculate the 2D-distance between the AUV's
         current position and the given waypoint.
         """
 
@@ -132,10 +156,7 @@ class Auv(object):
         y = config['variables']['northing_y']
         depth = config['variables']['depth']
 
-        print(self._auv_data[x])
-        print(self._current_waypoint['x'])
         sum_of_squares = pow(self._auv_data[x] - self._current_waypoint['x'], 2)
         sum_of_squares += pow(self._auv_data[y] - self._current_waypoint['y'], 2)
-        sum_of_squares += pow(self._auv_data[depth] - self._current_waypoint['depth'], 2)
 
         return sqrt(sum_of_squares)
