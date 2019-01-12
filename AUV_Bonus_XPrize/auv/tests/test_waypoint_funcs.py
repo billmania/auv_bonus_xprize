@@ -19,7 +19,10 @@ def auv_waypoint(auv_position):
     return waypoint_x, waypoint_y, waypoint_depth
 
 
-def test_distance_to_waypoint(monkeypatch, auv_position, auv_waypoint):
+def test_distance_to_waypoint(monkeypatch,
+                              mocker,
+                              auv_position,
+                              auv_waypoint):
     """test_distance_to_waypoint()
     """
 
@@ -57,6 +60,7 @@ def test_distance_to_waypoint(monkeypatch, auv_position, auv_waypoint):
                         {easting_x: auv_waypoint[0],
                          northing_y: auv_waypoint[1],
                          depth: auv_waypoint[2]})
+    mocker.patch.object(auv, 'altitude_safety', return_value=0.0)
 
     auv._current_waypoint['x'] = auv_waypoint[0]
     auv._current_waypoint['y'] = auv_waypoint[1]
@@ -74,7 +78,7 @@ def test_distance_to_waypoint(monkeypatch, auv_position, auv_waypoint):
     assert auv.distance_to_waypoint() == 0.0
 
 
-def test_on_the_waypoint(monkeypatch):
+def test_on_the_waypoint(monkeypatch, mocker):
     """test_on_the_waypoint()
     """
 
@@ -120,6 +124,7 @@ def test_on_the_waypoint(monkeypatch):
                         {'NAV_X': 10.0,
                          'NAV_Y': 10.0,
                          'NAV_DEPTH': 5.0})
+    mocker.patch.object(auv, 'altitude_safety', return_value=0.0)
 
     waypoint = (10, 10, 5, 90)
     assert auv.move_toward_waypoint(waypoint) == 'DONE'
@@ -128,7 +133,7 @@ def test_on_the_waypoint(monkeypatch):
     assert auv.move_toward_waypoint(waypoint) == 'DONE'
 
 
-def test_off_the_waypoint(monkeypatch):
+def test_off_the_waypoint(monkeypatch, mocker):
     """test_off_the_waypoint()
     """
 
@@ -174,12 +179,13 @@ def test_off_the_waypoint(monkeypatch):
                         {'NAV_X': 10.0,
                          'NAV_Y': 10.0,
                          'NAV_DEPTH': 5.0})
+    mocker.patch.object(auv, 'altitude_safety', return_value=0.0)
 
     waypoint = (12, 10, 5, 90)
     assert auv.move_toward_waypoint(waypoint) == 'MORE'
 
 
-def test_depth_is_off(monkeypatch):
+def test_depth_is_off(monkeypatch, mocker):
     """test_on_the_waypoint()
     """
 
@@ -225,12 +231,13 @@ def test_depth_is_off(monkeypatch):
                         {config['variables']['easting_x']: 10.0,
                          config['variables']['northing_y']: 10.0,
                          config['variables']['depth']: 3.0})
+    mocker.patch.object(auv, 'altitude_safety', return_value=0.0)
 
     waypoint = (10, 10, 15, 90)
     assert auv.move_toward_waypoint(waypoint) == 'MORE'
 
 
-def test_depth_is_close(monkeypatch):
+def test_depth_is_close(monkeypatch, mocker):
     """test_on_the_waypoint()
     """
 
@@ -275,6 +282,7 @@ def test_depth_is_close(monkeypatch):
                         {'NAV_X': 10.0,
                          'NAV_Y': 10.0,
                          'NAV_DEPTH': 4.0})
+    mocker.patch.object(auv, 'altitude_safety', return_value=0.0)
 
     waypoint = (10, 10, 5, 90)
     assert auv.move_toward_waypoint(waypoint) == 'DONE'

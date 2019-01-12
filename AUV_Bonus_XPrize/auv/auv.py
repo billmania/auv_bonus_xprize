@@ -82,6 +82,21 @@ class Auv(object):
 
         return False
 
+    def altitude_safety(self):
+        """altitude_safety()
+
+        Calculate and return the quantity of meters to
+        subtract from the desired depth, in order to maintain
+        a minimum altitude above the sea bottom.
+        """
+
+        min_altitude = float(config['auv']['min_altitude_meters'])
+        altitude = self._auv_data[config['variables']['altitude']]
+        if altitude < min_altitude:
+            return min_altitude - altitude
+
+        return 0.0
+
     def move_toward_waypoint(self, waypoint):
         """move_toward_waypoint()
 
@@ -115,7 +130,7 @@ class Auv(object):
                 -1)
             self.auv_control.publish_variable(
                 config['variables']['set_depth'],
-                self._current_waypoint['depth'],
+                self._current_waypoint['depth'] - self.altitude_safety(),
                 -1)
             self.auv_control.publish_variable(
                 config['variables']['set_speed'],
@@ -124,14 +139,14 @@ class Auv(object):
 
             return 'MORE'
 
-        elif (abs(self._current_waypoint['depth'] -
+        elif (abs((self._current_waypoint['depth'] - self.altitude_safety()) -
                     self._auv_data[config['variables']['depth']]) >
                 float(config['auv']['depth_tolerance'])):
             logging.debug('Moving toward the depth')
 
             self.auv_control.publish_variable(
                 config['variables']['set_depth'],
-                self._current_waypoint['depth'],
+                self._current_waypoint['depth'] - self.altitude_safety(),
                 -1)
             self.auv_control.publish_variable(
                 config['variables']['set_speed'],
