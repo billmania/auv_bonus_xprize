@@ -22,6 +22,7 @@ def variables_list():
     variables.append(config['variables']['easting_x'])
     variables.append(config['variables']['northing_y'])
     variables.append(config['variables']['depth'])
+    variables.append(config['variables']['altitude'])
     variables.append(config['variables']['heading'])
     variables.append(config['variables']['speed'])
 
@@ -72,8 +73,8 @@ class Auv(object):
         self._auv_data[moos_variable_name] = moos_variable_value
         self._auv_data['DATA_TIMESTAMP'] = time()
 
-    def found_plume(self):
-        """found_plume()
+    def plume_detected(self):
+        """plume_detected()
 
         Sample the dye sensor. If the measurement is above
         the noise level, record the measurement and return

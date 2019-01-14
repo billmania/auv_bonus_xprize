@@ -41,8 +41,8 @@ def _starting_waypt():
     """
 
     auv_position = config['starting']['auv_position_utm'].split(',')
-    return Point(int(float(auv_position[0])),
-                 int(float(auv_position[1])))
+    return Point(float(auv_position[0]),
+                 float(auv_position[1]))
 
 
 class SearchSpace(object):
@@ -173,28 +173,28 @@ class SearchSpace(object):
         https://stackoverflow.com/questions/343865/how-to-convert-from-utm-to-latlng-in-python-or-javascript
         """
 
-        boundary_buffer = float(config['search']['boundary_buffer_meters'])
+        boundary_buffer = round(float(config['search']['boundary_buffer_meters']))
 
         vertex_list = list()
 
         northwest_utm = config['starting']['northwest_utm'].split(',')
-        northwest_vertex = Point(int(northwest_utm[0]) + boundary_buffer,
-                                 int(northwest_utm[1]) - boundary_buffer)
+        northwest_vertex = Point(round(float(northwest_utm[0])) + boundary_buffer,
+                                 round(float(northwest_utm[1])) - boundary_buffer)
         vertex_list.append(northwest_vertex)
 
         northeast_utm = config['starting']['northeast_utm'].split(',')
-        northeast_vertex = Point(int(northeast_utm[0]) - boundary_buffer,
-                                 int(northeast_utm[1]) - boundary_buffer)
+        northeast_vertex = Point(round(float(northeast_utm[0])) - boundary_buffer,
+                                 round(float(northeast_utm[1])) - boundary_buffer)
         vertex_list.append(northeast_vertex)
 
         southeast_utm = config['starting']['southeast_utm'].split(',')
-        southeast_vertex = Point(int(southeast_utm[0]) - boundary_buffer,
-                                 int(southeast_utm[1]) + boundary_buffer)
+        southeast_vertex = Point(round(float(southeast_utm[0])) - boundary_buffer,
+                                 round(float(southeast_utm[1])) + boundary_buffer)
         vertex_list.append(southeast_vertex)
 
         southwest_utm = config['starting']['southwest_utm'].split(',')
-        southwest_vertex = Point(int(southwest_utm[0]) + boundary_buffer,
-                                 int(southwest_utm[1]) + boundary_buffer)
+        southwest_vertex = Point(round(float(southwest_utm[0])) + boundary_buffer,
+                                 round(float(southwest_utm[1])) + boundary_buffer)
         vertex_list.append(southwest_vertex)
 
         self._boundary_polygon = Polygon(vertex_list)

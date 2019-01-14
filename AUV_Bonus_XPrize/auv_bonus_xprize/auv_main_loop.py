@@ -12,8 +12,8 @@ from searchspace.searchspace import SearchSpace
 @unique
 class AUVState(Enum):
     SearchForPlume = 1
-    FollowPlume = 2
-    ReacquirePlume = 3
+    NewSearchArea = 2
+    Done = 3
     RefreshPosition = 4
     ReportResults = 5
     AbortMission = 9
@@ -33,25 +33,21 @@ def search_for_plume(auv, search_space):
         set_loop_hz(float(config['DEFAULT']['main_loop_hz']))
         while auv.move_toward_waypoint(waypt) == 'MORE':
             watchdog()
-            if auv.found_plume():
-                return AUVState.FollowPlume
+            if auv.plume_detected():
+                return AUVState.NewSearchArea
             loop_hz()
 
+    return AUVState.ReportResults
 
-def follow_plume(auv, search_space):
-    """follow_plume()
+def constrain_search_area(auv, search_space):
+    """constrain_search_area()
+
+    Further constrain the search area, so a new
+    search path can be calculatd.
     """
 
-    logging.debug('follow_plume()')
-    return AUVState.ReacquirePlume
-
-
-def reacquire_plume(auv, search_space):
-    """follow_plume()
-    """
-
-    logging.debug('reacquire_plume()')
-    return AUVState.RefreshPosition
+    logging.debug('constrain_search_area()')
+    return AUVState.SearchForPlume
 
 
 def refresh_position(auv, search_space):
@@ -67,7 +63,7 @@ def report_results(auv, search_space):
     """
 
     logging.debug('report_results()')
-    return AUVState.AbortMission
+    return AUVState.Done
 
 
 def abort_mission(auv, search_space):
@@ -75,7 +71,7 @@ def abort_mission(auv, search_space):
     """
 
     logging.debug('abort_mission()')
-    return AUVState.AbortMission
+    return AUVState.Done
 
 
 def watchdog():
@@ -84,19 +80,18 @@ def watchdog():
     Reset the watchdog timer.
     """
 
-    try:
+    if hasattr(watchdog, 'reset_time'):
         elapsed_time = time() - watchdog.reset_time
-
-    except AttributeError:
+    else:
         elapsed_time = 0.0
 
     logging.debug("Resetting the watchdog timer after {0}".format(
         elapsed_time) +
                   "seconds")
 
-    # TODO: Implement the watchdog reset logic
-
-    watchdog.reset_time = time()
+    if elapsed_time >= float(config['auv']['watchdog_timer']):
+        # TODO send reset message
+        watchdog.reset_time = time()
 
 
 def set_loop_hz(desired_hz):
@@ -127,8 +122,7 @@ def loop_hz():
 
 state_function = dict()
 state_function[AUVState.SearchForPlume] = search_for_plume
-state_function[AUVState.FollowPlume] = follow_plume
-state_function[AUVState.ReacquirePlume] = reacquire_plume
+state_function[AUVState.NewSearchArea] = constrain_search_area
 state_function[AUVState.RefreshPosition] = refresh_position
 state_function[AUVState.ReportResults] = report_results
 state_function[AUVState.AbortMission] = abort_mission
@@ -163,11 +157,13 @@ def main_loop():
 
         if auv.data_not_updated():
             logging.error('Data from AUV not up to date')
+            system_state = AUVState.AbortMission
+        else:
+            system_state = state_function[system_state](
+                auv,
+                search_space)
 
-        system_state = state_function[system_state](
-            auv,
-            search_space)
-
+        watchdog()
 
     state_function[system_state](auv, search_space)
 
