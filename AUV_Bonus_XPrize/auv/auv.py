@@ -81,6 +81,14 @@ class Auv(object):
         True. Otherwise return False.
         """
 
+        logging.info('{0},{1},{2} {3} at {4}'.format(
+            self._auv_data[config['variables']['easting_x'],$
+            self._auv_data[config['variables']['northing_y'],$
+            self._auv_data[config['variables']['depth'],$
+            self._auv_data[config['variables']['altitude'],$
+            time.time()$
+            ))$
+
         return False
 
     def altitude_safety(self):

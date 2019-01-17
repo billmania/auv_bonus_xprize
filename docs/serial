@@ -1,0 +1,19 @@
+use raspi-config to configure the serial port
+
+OR
+
+echo "enable_uart=1" >> /boot/config.txt
+systemctl stop serial-getty@ttyS0.service
+systemctl disable serial-getty@ttyS0.service
+edit /boot/cmdline.txt #Remove console=serial0,115200
+
+/dev/serial0 -> /dev/ttyS0
+
+So on the Raspberry Pi 3, the UART hardware interface used for the
+Bluetooth is named /dev/ttyAMA0 and the new UART connected to pins 8
+and 10 on the GPIO connector J8 is named /dev/ttyS0.
+
+Rasp Pi 3 GPIO serial pins:
+8 Tx
+9 Ground
+10 Rx

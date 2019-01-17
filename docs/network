@@ -15,7 +15,7 @@ nmcli connection
 root@QuestPi:~# ip address show dev wlan0
 3: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP 0
     link/ether b8:27:eb:af:2d:83 brd ff:ff:ff:ff:ff:ff
-    inet 192.168.0.100/24 brd 192.168.0.255 scope global wlan0
+    inet 192.168.0.101/24 brd 192.168.0.255 scope global wlan0
        valid_lft forever preferred_lft forever
     inet6 fe80::679b:1d62:8d0a:5117/64 scope link 
        valid_lft forever preferred_lft forever
