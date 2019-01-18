@@ -1,6 +1,6 @@
 
 To configure RaspPi network interfaces from the command line with nmcli:
-https://people.freedesktop.org/~lkundrak/nm-docs/nmcli-examples.html
+https://people.freedesktop.org/~lkundrak/nm-docs/mcli-examples.html
 
 To configure WiFi:
 
@@ -11,6 +11,9 @@ nmcli device wifi rescan
 nmcli device wifi list
 nmcli device wifi connect RTASUUV password XXXXXXXXX
 nmcli connection
+
+nmcli device wifi disconnect
+
 
 root@QuestPi:~# ip address show dev wlan0
 3: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP 0

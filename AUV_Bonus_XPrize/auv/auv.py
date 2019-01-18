@@ -5,7 +5,7 @@ The functionality for the AUV.
 
 import logging
 from math import sqrt
-from time import time
+from time import time, sleep
 from auv_bonus_xprize.settings import config
 from auv.auv_moos import AuvMOOS
 from searchspace.geometry import bearing_to_point, Point
@@ -73,6 +73,28 @@ class Auv(object):
         self._auv_data[moos_variable_name] = moos_variable_value
         self._auv_data['DATA_TIMESTAMP'] = time()
 
+    def wait_to_start(self):
+        """wait_to_start()
+
+        Measure the distance between the AUV and the
+        starting point defined in the config file. Don't
+        return until that distance is less than twice
+        the distance tolerance.
+        """
+
+        starting_position = config['starting']['auv_position_utm'].split(',')
+        self._current_waypoint['x'] = float(starting_position[0])
+        self._current_waypoint['y'] = float(starting_position[1])
+        self._current_waypoint['depth'] = 0.0
+
+        distance_to_start = self.distance_to_waypoint()
+        if distance_to_start > (2.0 * float(config['auv']['distance_tolerance'])):
+            logging.debug('Distance to starting position {0}'.format(
+                distance_to_start))
+
+            sleep(60.0)
+
+
     def plume_detected(self):
         """plume_detected()
 
@@ -82,12 +104,12 @@ class Auv(object):
         """
 
         logging.info('{0},{1},{2} {3} at {4}'.format(
-            self._auv_data[config['variables']['easting_x'],$
-            self._auv_data[config['variables']['northing_y'],$
-            self._auv_data[config['variables']['depth'],$
-            self._auv_data[config['variables']['altitude'],$
-            time.time()$
-            ))$
+            self._auv_data[config['variables']['easting_x']],
+            self._auv_data[config['variables']['northing_y']],
+            self._auv_data[config['variables']['depth']],
+            self._auv_data[config['variables']['altitude']],
+            time.time()
+            ))
 
         return False
 
@@ -105,6 +127,76 @@ class Auv(object):
             return min_altitude - altitude
 
         return 0.0
+
+    def surface(self):
+        """surface()
+
+        Move the AUV to the surface and stop the propeller.
+        """
+
+        surface_depth = float(config['auv']['surface_depth'])
+        while self._auv_data[config['variables']['depth']] > surface_depth:
+            self.auv_control.publish_variable(
+                config['variables']['set_heading'],
+                self._auv_data[config['variables']['heading']],
+                -1)
+            self.auv_control.publish_variable(
+                config['variables']['set_depth'],
+                surface_depth,
+                -1)
+            self.auv_control.publish_variable(
+                config['variables']['set_speed'],
+                float(config['auv']['depth_speed']),
+                -1)
+
+            sleep(1.0)
+
+    def strobe(self, state):
+        """strobe()
+
+        Turn the tail strobe light ON or OFF.
+        """
+
+        if state == "ON":
+            self.auv_control.publish_variable(
+                'RT_ENABLE_WHITE_STROBE',
+                1,
+                -1)
+        else:
+            self.auv_control.publish_variable(
+                'RT_ENABLE_WHITE_STROBE',
+                0,
+                -1)
+
+    def enable_steering(self):
+        """enable_steering()
+
+        Ensure the AUV is submerged sufficiently to enable
+        steering, because the AUV doesn't steer well on the
+        surface.
+        """
+
+        steerage_depth = float(config['auv']['min_steerage_depth_meters'])
+        while self._auv_data[config['variables']['depth']] < steerage_depth:
+            self.auv_control.publish_variable(
+                config['variables']['set_heading'],
+                self._auv_data[config['variables']['heading']],
+                -1)
+            self.auv_control.publish_variable(
+                config['variables']['set_depth'],
+                steerage_depth,
+                -1)
+            self.auv_control.publish_variable(
+                config['variables']['set_speed'],
+                float(config['auv']['max_speed']),
+                -1)
+
+            sleep(0.5)
+
+        self.auv_control.publish_variable(
+            config['variables']['set_speed'],
+            float(config['auv']['min_speed']),
+            -1)
 
     def move_toward_waypoint(self, waypoint):
         """move_toward_waypoint()
@@ -178,7 +270,6 @@ class Auv(object):
 
         x = config['variables']['easting_x']
         y = config['variables']['northing_y']
-        depth = config['variables']['depth']
 
         sum_of_squares = pow(self._auv_data[x] - self._current_waypoint['x'], 2)
         sum_of_squares += pow(self._auv_data[y] - self._current_waypoint['y'], 2)

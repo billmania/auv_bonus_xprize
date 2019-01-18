@@ -14,9 +14,24 @@ class AUVState(Enum):
     SearchForPlume = 1
     NewSearchArea = 2
     Done = 3
-    RefreshPosition = 4
     ReportResults = 5
+    WaitingToStart = 6
     AbortMission = 9
+
+
+def wait_to_start(auv, search_space):
+    """wait_to_start()
+
+    Get the AUV starting position from the config file
+    and then wait until the AUV is close to that position.
+    """
+
+    logging.debug('wait_to_start()')
+    auv.wait_to_start()
+
+    auv.strobe('OFF')
+
+    return AUVState.SearchForPlume
 
 
 def search_for_plume(auv, search_space):
@@ -39,6 +54,7 @@ def search_for_plume(auv, search_space):
 
     return AUVState.ReportResults
 
+
 def constrain_search_area(auv, search_space):
     """constrain_search_area()
 
@@ -50,19 +66,20 @@ def constrain_search_area(auv, search_space):
     return AUVState.SearchForPlume
 
 
-def refresh_position(auv, search_space):
-    """refresh_position()
-    """
-
-    logging.debug('refresh_position()')
-    return AUVState.ReportResults
-
-
 def report_results(auv, search_space):
     """report_results()
     """
 
     logging.debug('report_results()')
+
+    auv.surface()
+
+    #
+    # send the HereIAm message
+    #
+
+    auv.strobe('ON')
+
     return AUVState.Done
 
 
@@ -121,9 +138,9 @@ def loop_hz():
 
 
 state_function = dict()
+state_function[AUVState.WaitingToStart] = wait_to_start
 state_function[AUVState.SearchForPlume] = search_for_plume
 state_function[AUVState.NewSearchArea] = constrain_search_area
-state_function[AUVState.RefreshPosition] = refresh_position
 state_function[AUVState.ReportResults] = report_results
 state_function[AUVState.AbortMission] = abort_mission
 
@@ -148,7 +165,7 @@ def main_loop():
         sleep(1.0)
     logging.debug('AUV is connected')
 
-    system_state = AUVState.SearchForPlume
+    system_state = AUVState.WaitingToStart
 
     logging.debug('Starting the state loop')
     watchdog()

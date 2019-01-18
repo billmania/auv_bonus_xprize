@@ -59,18 +59,24 @@ class AuvMOOS(pymoos.comms):
 
         try:
             self._register_variables()
-    
+
             self.publish_variable('MOOS_MANUAL_OVERRIDE',
                                   'FALSE',
                                   -1)
             #
-            # The next variable compensates for some extremely sloppy
-            # MOOS code.
+            # The next (misspelled) variable compensates for some
+            # extremely sloppy MOOS code.
             #
             self.publish_variable('MOOS_MANUAL_OVERIDE',
                                   'FALSE',
                                   -1)
 
+            self.publish_variable('RT_SET_ALT_PING_RATE',
+                                  1,
+                                  -1)
+            self.publish_variable('RT_SET_ALT_TRIGGER',
+                                  'auto',
+                                  -1)
             self.connected = True
 
         except Exception as e:
