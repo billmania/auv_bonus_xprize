@@ -51,6 +51,8 @@ class Watchdog(object):
 
             sleep(1.0)
 
+            self.status()
+
         except SerialException as e:
             msg = 'Exception opening watchdog port {0}: {1}'.format(
                 config['watchdog']['port'],
@@ -147,7 +149,7 @@ class Watchdog(object):
 
         msg = START + msg_body + END
         try:
-            self._wd.write(msg)
+            self._wd.write(msg.encode('utf-8'))
             self._wd.flush()
 
         except SerialTimeoutException:
