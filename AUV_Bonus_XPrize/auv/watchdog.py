@@ -67,6 +67,9 @@ class Watchdog(object):
         """
 
         self._write_msg(RESET)
+        self.status()
+        if not self.watchdog_running:
+            logging.error('Failed to reset the watchdog')
 
     def stop(self):
         """stop()
@@ -75,7 +78,11 @@ class Watchdog(object):
         """
 
         self._write_msg(STOP)
-        logging.info('Watchdog timer stopped')
+        self.status()
+        if not self.watchdog_running:
+            logging.info('Watchdog timer stopped')
+        else:
+            logging.error('Failed to stop the watchdog')
 
     def send(self, msg):
         """send()
@@ -86,8 +93,13 @@ class Watchdog(object):
         self._write_msg(msg[:MAX_MSG_LENGTH])
         logging.debug('Wrote watchdog message: {0}'.format(
             msg))
-        result = self._read_msg()
-        if result and result[0] == SUCCESS:
+        result = list()
+        while not result:
+            self.reset()
+            result = self._read_msg()
+            sleep(30.0)
+
+        if result[0] == SUCCESS:
             logging.debug('Sent message: {0}'.format(
                 msg))
         else:
