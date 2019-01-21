@@ -94,7 +94,6 @@ class Auv(object):
 
             sleep(60.0)
 
-
     def plume_detected(self):
         """plume_detected()
 
@@ -103,12 +102,13 @@ class Auv(object):
         True. Otherwise return False.
         """
 
-        logging.info('{0},{1},{2} {3} at {4}'.format(
+        logging.info('{0}:{1},{2},{3} A{4} H{5}'.format(
+            time(),
             self._auv_data[config['variables']['easting_x']],
             self._auv_data[config['variables']['northing_y']],
             self._auv_data[config['variables']['depth']],
             self._auv_data[config['variables']['altitude']],
-            time.time()
+            self._auv_data[config['variables']['heading']]
             ))
 
         return False
@@ -134,11 +134,14 @@ class Auv(object):
         Move the AUV to the surface and stop the propeller.
         """
 
+        heading = self._auv_data[config['variables']['heading']]
+        turn_amount = int(config['auv']['spiral_amount'])
+
         surface_depth = float(config['auv']['surface_depth'])
         while self._auv_data[config['variables']['depth']] > surface_depth:
             self.auv_control.publish_variable(
                 config['variables']['set_heading'],
-                self._auv_data[config['variables']['heading']],
+                heading,
                 -1)
             self.auv_control.publish_variable(
                 config['variables']['set_depth'],
@@ -146,9 +149,10 @@ class Auv(object):
                 -1)
             self.auv_control.publish_variable(
                 config['variables']['set_speed'],
-                float(config['auv']['depth_speed']),
+                float(config['auv']['surface_speed']),
                 -1)
 
+            heading = float((int(heading) + turn_amount) % 360)
             sleep(1.0)
 
     def strobe(self, state):
@@ -217,6 +221,15 @@ class Auv(object):
         self._current_waypoint['y'] = waypoint[1]
         self._current_waypoint['depth'] = waypoint[2]
         _ = int(waypoint[3])
+
+        logging.info('{0}:{1},{2},{3} A{4} H{5}'.format(
+                        time(),
+                        self._auv_data[config['variables']['easting_x']],
+                        self._auv_data[config['variables']['northing_y']],
+                        self._auv_data[config['variables']['depth']],
+                        self._auv_data[config['variables']['altitude']],
+                        self._auv_data[config['variables']['heading']]
+                        ))
 
         if self.distance_to_waypoint() > float(config['auv']['distance_tolerance']):
             logging.debug('Moving toward the waypoint')

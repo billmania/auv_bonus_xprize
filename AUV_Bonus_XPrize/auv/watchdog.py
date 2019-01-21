@@ -1,0 +1,156 @@
+"""Watchdog
+
+The functionality for the Iridium module as a watchdog.
+"""
+
+import logging
+from time import sleep
+from serial import Serial, SerialException, SerialTimeoutException
+from serial import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
+from auv_bonus_xprize.settings import config
+
+START = '$'
+END = '\n'
+SUCCESS = 'SUCCESS'
+FAILURE = 'FAIL'
+RESET = 'WDTRESET'
+STOP = 'WDTSTOP'
+SEND = 'SBD'
+STATUS = 'STATUS'
+MAX_MSG_LENGTH = 120
+
+
+class Watchdog(object):
+    """Watchdog - The watchdog module
+
+    """
+
+    def __init__(self):
+        """__init__() - Create an instance of the Watchdog
+        """
+
+        try:
+            self._wd = Serial(
+                port=config['watchdog']['port'],
+                baudrate=int(config['watchdog']['data_rate']),
+                bytesize=EIGHTBITS,
+                parity=PARITY_NONE,
+                stopbits=STOPBITS_ONE,
+                timeout=1)
+            self._wd.rts = True
+            self._wd.dtr = True
+            self._wd.reset_input_buffer()
+            self._wd.reset_output_buffer()
+
+            self.watchdog_ready = True
+            self.iridium_status = 0
+            self.gps_satellites = 0
+            self.gps_fix = False
+            self.watchdog_running = True
+            self.watchdog_timer = None
+
+            sleep(1.0)
+
+        except SerialException as e:
+            msg = 'Exception opening watchdog port {0}: {1}'.format(
+                config['watchdog']['port'],
+                e)
+            logging.warning(msg)
+            self.watchdog_ready = False
+
+    def reset(self):
+        """reset()
+
+        Reset the watchdog timer.
+        """
+
+        self._write_msg(RESET)
+
+    def stop(self):
+        """stop()
+
+        Stop the watchdog from running.
+        """
+
+        self._write_msg(STOP)
+        logging.info('Watchdog timer stopped')
+
+    def send(self, msg):
+        """send()
+
+        Send a message.
+        """
+
+        self._write_msg(msg[:MAX_MSG_LENGTH])
+        logging.debug('Wrote watchdog message: {0}'.format(
+            msg))
+        result = self._read_msg()
+        if result and result[0] == SUCCESS:
+            logging.debug('Sent message: {0}'.format(
+                msg))
+        else:
+            logging.warning('Failed to send message: {0}'.format(
+                msg))
+
+    def status(self):
+        """status()
+
+        Get the status of the watchdog system.
+        """
+
+        self._write_msg(STATUS)
+
+        result = self._read_msg()
+        if result and result[0] == STATUS:
+            logging.info('Watchdog status: {0}'.format(
+                result))
+
+            self.iridium_status = int(result[1])
+            self.gps_satellites = int(result[2])
+            self.gps_fix = int(result[3]) == 1
+            self.watchdog_running = int(result[4]) == 1
+            self.watchdog_timer = int(result[5])
+
+        else:
+            logging.warning('Failed to get watchdog status')
+
+            self.iridium_status = 0
+            self.gps_satellites = 0
+            self.gps_fix = False
+            self.watchdog_running = True
+            self.watchdog_timer = None
+
+    def _read_msg(self):
+        """_read_msg()
+
+        Read a watchdog message from the serial port, extracting
+        the message type and stripping the prefix and suffix.
+        """
+
+        try:
+            raw_msg = self._wd.read_until()
+            msg = raw_msg.decode("utf-8")
+            if msg[0] == START and msg[-1:] == END:
+                return msg[1:-1].split(',')
+
+        except SerialTimeoutException:
+            logging.debug('Nothing to read in read_msg()')
+
+        return list()
+
+    def _write_msg(self, msg_body):
+        """_write_msg()
+
+        Build a complete message from msg_body and write it to
+        the serial port.
+        """
+
+        msg = START + msg_body + END
+        try:
+            self._wd.write(msg)
+            self._wd.flush()
+
+        except SerialTimeoutException:
+            log_msg = 'Failed to write watchdog message: {0}'.format(
+                msg_body)
+            logging.warning(log_msg)
