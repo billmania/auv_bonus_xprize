@@ -23,8 +23,14 @@ root@QuestPi:~# ip address show dev wlan0
     inet6 fe80::679b:1d62:8d0a:5117/64 scope link 
        valid_lft forever preferred_lft forever
 
-ETH_DEVICE="enxb827ebfa78d6"
+ETH_DEVICE="enxb827eb636a7a"
 nmcli con add con-name "static-eth0" ifname ${ETH_DEVICE} type ethernet ip4 10.0.1.211/24
+
+nmcli con add type ethernet con-name dhcp-eth0 ifname ${ETH_DEVICE}
+nmcli con down static-eth0 ; nmcli con up dhcp-eth0
+
+ip route del default via 192.168.122.1 dev ${DEVICE}
+ip route add default via 192.168.1.1 dev ${DEVICE}
 
 root@QuestPi:~# ip address show dev enxb827ebfa78d6
 2: enxb827ebfa78d6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast0
