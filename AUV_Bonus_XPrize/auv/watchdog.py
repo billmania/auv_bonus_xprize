@@ -9,13 +9,17 @@ from serial import Serial, SerialException, SerialTimeoutException
 from serial import EIGHTBITS, PARITY_NONE, STOPBITS_ONE
 from auv_bonus_xprize.settings import config
 
+logging.basicConfig(filename=config['DEFAULT']['logfile'],
+                    format='%(asctime)s %(levelname)s %(message)s',
+                    level=logging.DEBUG)
+
 START = '$'
 END = '\n'
 SUCCESS = 'SUCCESS'
 FAILURE = 'FAIL'
 RESET = 'WDTRESET'
 STOP = 'WDTSTOP'
-SEND = 'SBD'
+SEND = 'SBD,'
 STATUS = 'STATUS'
 MAX_MSG_LENGTH = 120
 
@@ -84,27 +88,36 @@ class Watchdog(object):
         else:
             logging.error('Failed to stop the watchdog')
 
-    def send(self, msg):
+    def send(self, msg_text):
         """send()
 
         Send a message.
         """
 
-        self._write_msg(msg[:MAX_MSG_LENGTH])
-        logging.debug('Wrote watchdog message: {0}'.format(
+        msg = SEND + msg_text[:MAX_MSG_LENGTH]
+        self._write_msg(msg)
+        logging.debug('send() wrote message: {0}'.format(
             msg))
-        result = list()
-        while not result:
-            self.reset()
-            result = self._read_msg()
-            sleep(30.0)
 
-        if result[0] == SUCCESS:
+        result = list()
+        iterations = 20
+        while not result and iterations:
+            iterations = iterations - 1
+
+            self.reset()
+            sleep(30.0)
+            result = self._read_msg()
+
+        logging.debug('Remaining send() iterations: {0}'.format(iterations))
+
+        if result and result[0] == SUCCESS:
             logging.debug('Sent message: {0}'.format(
                 msg))
+            return True
         else:
             logging.warning('Failed to send message: {0}'.format(
                 msg))
+            return False
 
     def status(self):
         """status()
@@ -143,12 +156,23 @@ class Watchdog(object):
 
         try:
             raw_msg = self._wd.read_until()
+            logging.debug('Raw message read: {0}'.format(
+                raw_msg))
             msg = raw_msg.decode("utf-8")
+            if not msg:
+                return list()
+
             if msg[0] == START and msg[-1:] == END:
                 return msg[1:-1].split(',')
 
         except SerialTimeoutException:
             logging.debug('Nothing to read in read_msg()')
+
+        except Exception as e:
+            logging.error('Exception with msg {0}: {1} - {2}'.format(
+                msg,
+                len(msg),
+                e))
 
         return list()
 
