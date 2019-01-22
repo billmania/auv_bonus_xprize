@@ -8,6 +8,7 @@ from math import sqrt
 from time import time, sleep
 from auv_bonus_xprize.settings import config
 from auv.auv_moos import AuvMOOS
+from auv.watchdog import Watchdog
 from searchspace.geometry import bearing_to_point, Point
 
 
@@ -46,6 +47,8 @@ class Auv(object):
         self._current_waypoint['x'] = 0.0
         self._current_waypoint['y'] = 0.0
         self._current_waypoint['depth'] = 0.0
+
+        self.watchdog =  Watchdog()
 
         self.auv_control = AuvMOOS(
             config['auv']['host'],

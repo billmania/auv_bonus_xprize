@@ -27,9 +27,10 @@ def wait_to_start(auv, search_space):
     """
 
     logging.debug('wait_to_start()')
+    auv.watchdog.stop()
     auv.wait_to_start()
-
     auv.strobe('OFF')
+    auv.watchdog.reset()
 
     return AUVState.SearchForPlume
 
@@ -43,11 +44,13 @@ def search_for_plume(auv, search_space):
 
     logging.debug('search_for_plume()')
 
+    auv.watchdog.stop()
     search_path = search_space.calculate_search_path()
+    auv.watchdog.reset()
     for waypt in search_path:
         set_loop_hz(float(config['DEFAULT']['main_loop_hz']))
         while auv.move_toward_waypoint(waypt) == 'MORE':
-            watchdog()
+            auv.watchdog.reset()
             if auv.plume_detected():
                 return AUVState.NewSearchArea
             loop_hz()
@@ -91,26 +94,6 @@ def abort_mission(auv, search_space):
     return AUVState.Done
 
 
-def watchdog():
-    """watchdog()
-
-    Reset the watchdog timer.
-    """
-
-    if hasattr(watchdog, 'reset_time'):
-        elapsed_time = time() - watchdog.reset_time
-    else:
-        elapsed_time = 0.0
-
-    logging.debug("Resetting the watchdog timer after {0}".format(
-        elapsed_time) +
-                  "seconds")
-
-    if elapsed_time >= float(config['auv']['watchdog_timer']):
-        # TODO send reset message
-        watchdog.reset_time = time()
-
-
 def set_loop_hz(desired_hz):
     """set_loop_hz()
 
@@ -152,14 +135,13 @@ def main_loop():
     """
 
     logging.debug('Instantiating the SearchSpace() object')
-    watchdog()
     search_space = SearchSpace()
     search_space.set_search_boundaries()
     search_space.set_current_velocity()
 
     logging.debug('Instantiating the Auv() object')
-    watchdog()
     auv = Auv()
+    auv.watchdog.reset()
     logging.debug('Waiting until the AUV is connected')
     while not auv.auv_control.connected:
         sleep(1.0)
@@ -168,7 +150,7 @@ def main_loop():
     system_state = AUVState.WaitingToStart
 
     logging.debug('Starting the state loop')
-    watchdog()
+    auv.watchdog.reset()
     while system_state not in [AUVState.AbortMission,
                                AUVState.ReportResults]:
 
@@ -180,7 +162,7 @@ def main_loop():
                 auv,
                 search_space)
 
-        watchdog()
+        auv.watchdog.reset()
 
     state_function[system_state](auv, search_space)
 
