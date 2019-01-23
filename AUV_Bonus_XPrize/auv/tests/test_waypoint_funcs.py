@@ -230,6 +230,7 @@ def test_depth_is_off(monkeypatch, mocker):
                         '_auv_data',
                         {config['variables']['easting_x']: 10.0,
                          config['variables']['northing_y']: 10.0,
+                         config['variables']['heading']: 90.0,
                          config['variables']['depth']: 3.0})
     mocker.patch.object(auv, 'altitude_safety', return_value=0.0)
 

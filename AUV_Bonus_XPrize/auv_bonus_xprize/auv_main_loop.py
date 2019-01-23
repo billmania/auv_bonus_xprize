@@ -27,9 +27,16 @@ def wait_to_start(auv, search_space):
     """
 
     logging.debug('wait_to_start()')
+    auv.strobe('OFF')
     auv.watchdog.stop()
     auv.wait_to_start()
+
+    logging.debug('At the starting location')
+
+    auv.strobe('ON')
+    sleep(3.0)
     auv.strobe('OFF')
+
     auv.watchdog.reset()
 
     return AUVState.SearchForPlume
@@ -47,6 +54,7 @@ def search_for_plume(auv, search_space):
     auv.watchdog.stop()
     search_path = search_space.calculate_search_path()
     auv.watchdog.reset()
+
     for waypt in search_path:
         set_loop_hz(float(config['DEFAULT']['main_loop_hz']))
         while auv.move_toward_waypoint(waypt) == 'MORE':

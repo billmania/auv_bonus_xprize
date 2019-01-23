@@ -12,6 +12,11 @@ from auv.watchdog import Watchdog
 from auv.dye_sensor import DyeSensor
 from searchspace.geometry import bearing_to_point, Point
 
+STROBE = {
+    "ON": 1,
+    "OFF": 0
+}
+
 
 def variables_list():
     """variables_list()
@@ -147,6 +152,35 @@ class Auv(object):
 
         return 0.0
 
+    def turn_toward_heading(
+        self,
+        heading: int,
+        new_heading: int) -> int:
+        """turn_toward_heading()
+
+        Given a heading and a new heading calculate
+        an intermediate heading which moves toward the
+        new heading.
+        """
+
+        turn_increment = int(config['auv']['spiral_amount'])
+        if new_heading < heading:
+            if (heading - new_heading) < 180:
+                turn_heading = heading - turn_increment
+                if turn_heading < 0:
+                    return turn_heading + 360
+                return turn_heading
+            else:
+                return (heading + turn_increment) % 360
+        else:
+            if (new_heading - heading) < 180:
+                return (heading + turn_increment) % 360
+            else:
+                turn_heading = heading - turn_increment
+                if turn_heading < 0:
+                    return turn_heading + 360
+                return turn_heading
+
     def surface(self):
         """surface()
 
@@ -158,6 +192,8 @@ class Auv(object):
 
         surface_depth = float(config['auv']['surface_depth'])
         while self._auv_data[config['variables']['depth']] > surface_depth:
+            self.watchdog.reset()
+
             self.auv_control.publish_variable(
                 config['variables']['set_heading'],
                 heading,
@@ -180,15 +216,10 @@ class Auv(object):
         Turn the tail strobe light ON or OFF.
         """
 
-        if state == "ON":
+        if state in STROBE:
             self.auv_control.publish_variable(
                 'RT_ENABLE_WHITE_STROBE',
-                1,
-                -1)
-        else:
-            self.auv_control.publish_variable(
-                'RT_ENABLE_WHITE_STROBE',
-                0,
+                STROBE[state],
                 -1)
 
     def enable_steering(self):
@@ -200,10 +231,11 @@ class Auv(object):
         """
 
         steerage_depth = float(config['auv']['min_steerage_depth_meters'])
+        heading = self._auv_data[config['variables']['heading']]
         while self._auv_data[config['variables']['depth']] < steerage_depth:
             self.auv_control.publish_variable(
                 config['variables']['set_heading'],
-                self._auv_data[config['variables']['heading']],
+                heading,
                 -1)
             self.auv_control.publish_variable(
                 config['variables']['set_depth'],
@@ -241,15 +273,6 @@ class Auv(object):
         self._current_waypoint['depth'] = waypoint[2]
         _ = int(waypoint[3])
 
-        logging.info('{0}:{1},{2},{3} A{4} H{5}'.format(
-                        time(),
-                        self._auv_data[config['variables']['easting_x']],
-                        self._auv_data[config['variables']['northing_y']],
-                        self._auv_data[config['variables']['depth']],
-                        self._auv_data[config['variables']['altitude']],
-                        self._auv_data[config['variables']['heading']]
-                        ))
-
         if self.distance_to_waypoint() > float(config['auv']['distance_tolerance']):
             logging.debug('Moving toward the waypoint')
             bearing = bearing_to_point(
@@ -277,6 +300,13 @@ class Auv(object):
                 float(config['auv']['depth_tolerance'])):
             logging.debug('Moving toward the depth')
 
+            heading = self.turn_toward_heading(
+                    int(self._auv_data[config['variables']['heading']]),
+                    int(config['starting']['set']))
+            self.auv_control.publish_variable(
+                config['variables']['set_heading'],
+                heading,
+                -1)
             self.auv_control.publish_variable(
                 config['variables']['set_depth'],
                 self._current_waypoint['depth'] - self.altitude_safety(),
