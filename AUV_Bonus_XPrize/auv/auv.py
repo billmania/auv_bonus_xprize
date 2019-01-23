@@ -9,6 +9,7 @@ from time import time, sleep
 from auv_bonus_xprize.settings import config
 from auv.auv_moos import AuvMOOS
 from auv.watchdog import Watchdog
+from auv.dye_sensor import DyeSensor
 from searchspace.geometry import bearing_to_point, Point
 
 
@@ -48,7 +49,8 @@ class Auv(object):
         self._current_waypoint['y'] = 0.0
         self._current_waypoint['depth'] = 0.0
 
-        self.watchdog =  Watchdog()
+        self.watchdog = Watchdog()
+        self.dye = DyeSensor()
 
         self.auv_control = AuvMOOS(
             config['auv']['host'],
@@ -105,14 +107,28 @@ class Auv(object):
         True. Otherwise return False.
         """
 
-        logging.info('{0}:{1},{2},{3} A{4} H{5}'.format(
+        current_depth = self._auv_data[config['variables']['depth']]
+        min_sensor_depth = float(config['dye_sensor']['min_sensor_depth'])
+        if current_depth < min_sensor_depth:
+            return False
+
+        sensor_value = self.dye.sensor_value()
+
+        logging.info('DATA,{0},{1},{2},{3},{4},{5},{6}'.format(
             time(),
             self._auv_data[config['variables']['easting_x']],
             self._auv_data[config['variables']['northing_y']],
             self._auv_data[config['variables']['depth']],
             self._auv_data[config['variables']['altitude']],
-            self._auv_data[config['variables']['heading']]
+            self._auv_data[config['variables']['heading']],
+            sensor_value
             ))
+
+        detection_threshold = int(config['dye_sensor']['plume_detected_value']);
+        if sensor_value >= detection_threshold:
+            logging.debug('Plume detected: {0}'.format(
+                sensor_value))
+            return True
 
         return False
 

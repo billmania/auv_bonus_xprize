@@ -52,10 +52,10 @@ def search_for_plume(auv, search_space):
         while auv.move_toward_waypoint(waypt) == 'MORE':
             auv.watchdog.reset()
             if auv.plume_detected():
-                return AUVState.NewSearchArea
+                return AUVState.ReportResults
             loop_hz()
 
-    return AUVState.ReportResults
+    return AUVState.AbortMission
 
 
 def constrain_search_area(auv, search_space):
@@ -76,12 +76,8 @@ def report_results(auv, search_space):
     logging.debug('report_results()')
 
     auv.surface()
-
-    #
-    # send the HereIAm message
-    #
-
     auv.strobe('ON')
+    auv.watchdog.send('Detected plume')
 
     return AUVState.Done
 
@@ -91,6 +87,11 @@ def abort_mission(auv, search_space):
     """
 
     logging.debug('abort_mission()')
+
+    auv.surface()
+    auv.strobe('ON')
+    auv.watchdog.send('Aborted')
+
     return AUVState.Done
 
 
