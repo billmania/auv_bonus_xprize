@@ -1,74 +1,49 @@
-import logging
-from time import sleep, time
+""" Auv
 
-from auv_bonus_xprize.settings import config
+Exercise move_to_waypoint()
+"""
+
+import logging
+from time import sleep
+
 from auv.auv import Auv
 
-"""
-from RiptideMicroUUVInterface.cpp
-
-"""
+waypts = list()
+waypts.append((603931.0, 4126129.0, 2.0, 0))
+waypts.append((603931.0, 4126129.0, 4.0, 0))
+waypts.append((603932.0, 4126130.0, 4.0, 0))
 
 auv = Auv()
+auv.watchdog.stop()
 
 while not auv.auv_control.connected:
     print('Waiting to connect')
     sleep(1.0)
 
-
-logging.info('{0}:{1},{2},{3} A{4} H{5}'.format(
-    time(),
-    auv._auv_data[config['variables']['easting_x']],
-    auv._auv_data[config['variables']['northing_y']],
-    auv._auv_data[config['variables']['depth']],
-    auv._auv_data[config['variables']['altitude']],
-    auv._auv_data[config['variables']['heading']]
-    ))
-
+auv.watchdog.reset()
 logging.debug('enable_steering()')
 auv.enable_steering()
-logging.debug('at steering depth')
 
-logging.info('{0}:{1},{2},{3} A{4} H{5}'.format(
-    time(),
-    auv._auv_data[config['variables']['easting_x']],
-    auv._auv_data[config['variables']['northing_y']],
-    auv._auv_data[config['variables']['depth']],
-    auv._auv_data[config['variables']['altitude']],
-    auv._auv_data[config['variables']['heading']]
-    ))
+for waypt in waypts:
+    logging.debug('moving to waypt {0}'.format(
+        waypt))
 
-waypt = (603931.0, 4126129.0, 1.0, 0)
-logging.debug('moving to waypt {0}'.format(
-    waypt))
+    iterations = 200
+    while iterations and auv.move_toward_waypoint(waypt) == 'MORE':
+        auv.watchdog.reset()
+        auv.plume_detected()
 
-iterations = 40
-while iterations and auv.move_toward_waypoint(waypt) == 'MORE':
-    logging.info('{0}:{1},{2},{3} A{4} H{5}'.format(
-        time(),
-        auv._auv_data[config['variables']['easting_x']],
-        auv._auv_data[config['variables']['northing_y']],
-        auv._auv_data[config['variables']['depth']],
-        auv._auv_data[config['variables']['altitude']],
-        auv._auv_data[config['variables']['heading']]
-        ))
-    sleep(1.0)
-    iterations = iterations - 1
+        sleep(1.0)
+        iterations = iterations - 1
 
-logging.debug('remainging iterations {0}'.format(iterations))
+    logging.debug('remaining iterations {0}'.format(iterations))
 
-logging.debug('surfacing')
+auv.plume_detected()
+
+logging.debug('surface()')
 auv.surface()
-logging.debug('done surfacing')
 
-logging.info('{0}:{1},{2},{3} A{4} H{5}'.format(
-    time(),
-    auv._auv_data[config['variables']['easting_x']],
-    auv._auv_data[config['variables']['northing_y']],
-    auv._auv_data[config['variables']['depth']],
-    auv._auv_data[config['variables']['altitude']],
-    auv._auv_data[config['variables']['heading']]
-    ))
+auv.plume_detected()
 
 auv.auv_control.publish_variable(
     'DESIRED_SPEED',

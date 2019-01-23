@@ -87,9 +87,9 @@ class Auv(object):
         """wait_to_start()
 
         Measure the distance between the AUV and the
-        starting point defined in the config file. Don't
-        return until that distance is less than twice
-        the distance tolerance.
+        starting point defined in the config file. If
+        the distance is less than twice the distance
+        tolerance, return False.
         """
 
         starting_position = config['starting']['auv_position_utm'].split(',')
@@ -102,7 +102,9 @@ class Auv(object):
             logging.debug('Distance to starting position {0}'.format(
                 distance_to_start))
 
-            sleep(60.0)
+            return True
+
+        return False
 
     def plume_detected(self):
         """plume_detected()
@@ -115,6 +117,7 @@ class Auv(object):
         current_depth = self._auv_data[config['variables']['depth']]
         min_sensor_depth = float(config['dye_sensor']['min_sensor_depth'])
         if current_depth < min_sensor_depth:
+            logging.debug('Too shallow for dye sensor')
             return False
 
         sensor_value = self.dye.sensor_value()

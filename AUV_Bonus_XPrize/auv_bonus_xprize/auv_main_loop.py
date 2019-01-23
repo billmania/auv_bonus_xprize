@@ -19,17 +19,21 @@ class AUVState(Enum):
     AbortMission = 9
 
 
-def wait_to_start(auv, search_space):
-    """wait_to_start()
+def waiting_to_start(auv, search_space):
+    """waiting_to_start()
 
     Get the AUV starting position from the config file
     and then wait until the AUV is close to that position.
     """
 
-    logging.debug('wait_to_start()')
+    logging.debug('waiting_to_start()')
     auv.strobe('OFF')
     auv.watchdog.stop()
-    auv.wait_to_start()
+
+    set_loop_hz(1.0/60.0)
+    while auv.wait_to_start():
+        auv.plume_detected()
+        loop_hz()
 
     logging.debug('At the starting location')
 
@@ -130,7 +134,7 @@ def loop_hz():
 
 
 state_function = dict()
-state_function[AUVState.WaitingToStart] = wait_to_start
+state_function[AUVState.WaitingToStart] = waiting_to_start
 state_function[AUVState.SearchForPlume] = search_for_plume
 state_function[AUVState.NewSearchArea] = constrain_search_area
 state_function[AUVState.ReportResults] = report_results
