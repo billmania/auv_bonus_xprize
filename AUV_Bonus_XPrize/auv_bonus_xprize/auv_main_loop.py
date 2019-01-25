@@ -10,6 +10,7 @@ from auv.auv import Auv
 from searchspace.searchspace import SearchSpace
 from searchspace.geometry import compass_heading_to_polar_angle
 
+quitting_time = None
 
 @unique
 class AUVState(Enum):
@@ -27,6 +28,7 @@ def waiting_to_start(auv, search_space):
     Get the AUV starting position from the config file
     and then wait until the AUV is close to that position.
     """
+    global quitting_time
 
     logging.debug('waiting_to_start()')
     auv.strobe('OFF')
@@ -42,6 +44,12 @@ def waiting_to_start(auv, search_space):
     auv.strobe('ON')
     sleep(3.0)
     auv.strobe('OFF')
+
+    time_limit = float(config['search']['time_limit_secs'])
+    quitting_time = time() + time_limit
+    logging.debug('time_limit is {0}, quitting_time is {1}'.format(
+        time_limit,
+        quitting_time))
 
     auv.watchdog.reset()
 
@@ -224,6 +232,12 @@ def main_loop():
     auv.watchdog.reset()
     while system_state not in [AUVState.AbortMission,
                                AUVState.ReportResults]:
+
+        if quitting_time:
+            if time() > quitting_time:
+                logging.warning('Time limit reached')
+                system_state = AUVState.AbortMission
+                continue
 
         if auv.data_not_updated():
             logging.error('Data from AUV not up to date')
