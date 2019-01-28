@@ -92,6 +92,13 @@ class Auv(object):
         tolerance, return False.
         """
 
+        if 'start_delay_secs' in config['starting']:
+            start_delay_secs = float(config['starting']['start_delay_secs'])
+            logging.info('Waiting {0} seconds before starting'.format(
+                start_delay_secs))
+            sleep(start_delay_secs)
+            return False
+
         starting_position = config['starting']['auv_position_utm'].split(',')
         self._current_waypoint['x'] = float(starting_position[0])
         self._current_waypoint['y'] = float(starting_position[1])
