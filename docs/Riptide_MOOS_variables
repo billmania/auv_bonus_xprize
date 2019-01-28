@@ -1,6 +1,8 @@
 
 MOOS variables of interest
 
+grep ' NAV_[^ ]*  *pNav' MOOSLog_*.alog
+
 DESIRED_HEADING - int(), degrees
 DESIRED_DEPTH - float(), degrees
 DESIRED_THRUST - float(), percentage of full power

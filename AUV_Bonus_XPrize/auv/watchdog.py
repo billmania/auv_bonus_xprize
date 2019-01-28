@@ -42,7 +42,7 @@ class Watchdog(object):
             self._wd.reset_input_buffer()
             self._wd.reset_output_buffer()
 
-            self.watchdog_ready = False
+            self.watchdog_ready = True
             self.iridium_status = None
             self.gps_satellites = None
             self.gps_fix = False

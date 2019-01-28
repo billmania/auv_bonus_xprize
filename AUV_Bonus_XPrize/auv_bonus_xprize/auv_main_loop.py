@@ -73,16 +73,14 @@ def search_for_plume(auv, search_space):
         set_loop_hz(float(config['DEFAULT']['main_loop_hz']))
         while auv.move_toward_waypoint(waypt) == 'MORE':
             auv.watchdog.reset()
-            if auv.plume_detected():
-                return AUVState.ReportResults
 
-#            if auv.plume_detected():
-#                above_the_bottom = float(config['search']['max_depth']) - auv._auv_data[config['variables']['depth']]
-#                depth_tolerance = float(config['auv']['depth_tolerance'])
-#                if above_the_bottom <= depth_tolerance:
-#                    return AUVState.ReportResults
-#                else:
-#                    return AUVState.NewSearchArea
+            if auv.plume_detected():
+                above_the_bottom = float(config['search']['max_depth']) - auv._auv_data[config['variables']['depth']]
+                depth_tolerance = float(config['auv']['depth_tolerance'])
+                if above_the_bottom <= depth_tolerance:
+                    return AUVState.ReportResults
+                else:
+                    return AUVState.NewSearchArea
 
             loop_hz()
 
