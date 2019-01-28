@@ -247,10 +247,10 @@ class Auv(object):
         steerage_depth = float(config['auv']['min_steerage_depth_meters'])
         heading = self._auv_data[config['variables']['heading']]
         iterations = 100
-        logging.debug('enable_steering(): iter {0}, head {1}, min depth {2}, dive speed {3}'.format(
+        logging.debug('enable_steering(): iter {0}, head {1}, steerage depth {2}, dive speed {3}'.format(
             iterations,
             heading,
-            config['variables']['set_depth'],
+            steerage_depth,
             config['auv']['steering_dive_speed']))
 
         while iterations and self._auv_data[config['variables']['depth']] < steerage_depth:
