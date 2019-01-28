@@ -76,6 +76,11 @@ def search_for_plume(auv, search_space):
         while auv.move_toward_waypoint(waypt) == 'MORE':
             auv.watchdog.reset()
 
+            if quitting_time:
+                if time() > quitting_time:
+                    logging.warning('Time limit reached in search_for_plume()')
+                    return AUVState.AbortMission
+
             if auv.plume_detected():
                 above_the_bottom = float(config['search']['max_depth']) - auv._auv_data[config['variables']['depth']]
                 depth_tolerance = float(config['auv']['depth_tolerance'])
