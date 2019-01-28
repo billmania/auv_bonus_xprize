@@ -52,6 +52,8 @@ def waiting_to_start(auv, search_space):
         quitting_time))
 
     auv.watchdog.reset()
+    logging.debug('waiting_to_start(): enable_steering()')
+    auv.enable_steering()
 
     return AUVState.SearchForPlume
 
