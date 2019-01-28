@@ -114,14 +114,7 @@ class Auv(object):
         True. Otherwise return False.
         """
 
-        current_depth = self._auv_data[config['variables']['depth']]
-        min_sensor_depth = float(config['dye_sensor']['min_sensor_depth'])
-        if current_depth < min_sensor_depth:
-            logging.debug('Too shallow for dye sensor')
-            return False
-
         sensor_value = self.dye.sensor_value()
-
         logging.info('DATA,{0},{1},{2},{3},{4},{5},{6}'.format(
             time(),
             self._auv_data[config['variables']['easting_x']],
@@ -131,6 +124,12 @@ class Auv(object):
             self._auv_data[config['variables']['heading']],
             sensor_value
             ))
+
+        current_depth = self._auv_data[config['variables']['depth']]
+        min_sensor_depth = float(config['dye_sensor']['min_sensor_depth'])
+        if current_depth < min_sensor_depth:
+            logging.debug('Too shallow for dye sensor')
+            return False
 
         detection_threshold = int(config['dye_sensor']['plume_detected_value']);
         if sensor_value >= detection_threshold:
@@ -150,7 +149,13 @@ class Auv(object):
 
         min_altitude = float(config['auv']['min_altitude_meters'])
         altitude = self._auv_data[config['variables']['altitude']]
-        if altitude < min_altitude:
+        #
+        # The altimeter reports 0.0 when it's out of range,
+        # instead of something sensible like NA or the maximum
+        # range.
+        #
+        if 0.0 < altitude < min_altitude:
+            logging.debug('altitude_safety() Adjusting altitude')
             return min_altitude - altitude
 
         return 0.0
@@ -235,7 +240,15 @@ class Auv(object):
 
         steerage_depth = float(config['auv']['min_steerage_depth_meters'])
         heading = self._auv_data[config['variables']['heading']]
-        while self._auv_data[config['variables']['depth']] < steerage_depth:
+        iterations = 100
+        logging.debug('enable_steering(): iter {0}, head {1}, min depth {2}, dive speed {3}'.format(
+            iterations,
+            heading,
+            config['variables']['set_depth'],
+            config['auv']['steering_dive_speed']))
+
+        while iterations and self._auv_data[config['variables']['depth']] < steerage_depth:
+            iterations = iterations - 1
             self.auv_control.publish_variable(
                 config['variables']['set_heading'],
                 heading,
@@ -246,11 +259,14 @@ class Auv(object):
                 -1)
             self.auv_control.publish_variable(
                 config['variables']['set_speed'],
-                float(config['auv']['max_speed']),
+                float(config['auv']['steering_dive_speed']),
                 -1)
 
             sleep(0.5)
 
+        logging.debug('enable_steering() ending iter {0}, depth {1}'.format(
+            iterations,
+            self._auv_data[config['variables']['depth']]))
         self.auv_control.publish_variable(
             config['variables']['set_speed'],
             float(config['auv']['min_speed']),
@@ -277,7 +293,7 @@ class Auv(object):
         _ = int(waypoint[3])
 
         if self.distance_to_waypoint() > float(config['auv']['distance_tolerance']):
-            logging.debug('Moving toward the waypoint')
+            logging.debug('move_toward_waypoint(): Moving toward the waypoint')
             bearing = bearing_to_point(
                 Point(self._auv_data[config['variables']['easting_x']],
                       self._auv_data[config['variables']['northing_y']]),
@@ -301,7 +317,7 @@ class Auv(object):
         elif (abs((self._current_waypoint['depth'] - self.altitude_safety()) -
                     self._auv_data[config['variables']['depth']]) >
                 float(config['auv']['depth_tolerance'])):
-            logging.debug('Moving toward the depth')
+            logging.debug('move_toward_waypoint(): Moving toward the depth')
 
             heading = self.turn_toward_heading(
                     int(self._auv_data[config['variables']['heading']]),
@@ -322,7 +338,7 @@ class Auv(object):
             return 'MORE'
 
         else:
-            logging.debug('Reached the waypoint and depth')
+            logging.debug('move_toward_waypoint(): Reached the waypoint and depth')
             return 'DONE'
 
     def distance_to_waypoint(self):
