@@ -135,7 +135,6 @@ class Auv(object):
         current_depth = self._auv_data[config['variables']['depth']]
         min_sensor_depth = float(config['dye_sensor']['min_sensor_depth'])
         if current_depth < min_sensor_depth:
-            logging.debug('Too shallow for dye sensor')
             return False
 
         detection_threshold = int(config['dye_sensor']['plume_detected_value']);
