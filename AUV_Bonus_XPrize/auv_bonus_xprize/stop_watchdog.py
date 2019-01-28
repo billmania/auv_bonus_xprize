@@ -21,3 +21,6 @@ if wd.gps_fix:
     print('GPS satellites: {0}'.format(wd.gps_satellites))
 else:
     print('No GPS fix')
+
+print('Sending test message')
+wd.send('Test from stop_watchdog')
