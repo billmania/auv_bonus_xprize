@@ -1,6 +1,7 @@
 """AuvMOOS class
 """
 
+from math import isnan
 import logging
 from pymoos import pymoos
 
@@ -89,6 +90,10 @@ class AuvMOOS(pymoos.comms):
         for msg in self.fetch():
             if msg.key() in self._variables_list:
                 if msg.is_double():
+                    if isnan(msg.double()):
+                        logging.warning('_on_new_mail(): {0} value is NaN'.format(msg.key()))
+                        continue
+
                     variable_value = msg.double()
                 elif msg.is_string():
                     variable_value = msg.string()

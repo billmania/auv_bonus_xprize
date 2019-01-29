@@ -72,6 +72,7 @@ def search_for_plume(auv, search_space):
     auv.watchdog.reset()
 
     for waypt in search_path:
+        logging.debug('search_for_plume(): Moving to waypt {0}'.format(waypt))
         set_loop_hz(float(config['DEFAULT']['main_loop_hz']))
         while auv.move_toward_waypoint(waypt) == 'MORE':
             auv.watchdog.reset()
