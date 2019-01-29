@@ -296,7 +296,7 @@ class Auv(object):
         self._current_waypoint['x'] = waypoint[0]
         self._current_waypoint['y'] = waypoint[1]
         self._current_waypoint['depth'] = waypoint[2]
-        _ = int(waypoint[3])
+        # Ignore waypoint[3]
 
         if self.distance_to_waypoint() > float(config['auv']['distance_tolerance']):
             logging.debug('move_toward_waypoint(): Moving toward the waypoint')
