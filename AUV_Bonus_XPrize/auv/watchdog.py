@@ -92,8 +92,6 @@ class Watchdog(object):
 
         msg = SEND + msg_text[:MAX_MSG_LENGTH]
         self._write_msg(msg)
-        logging.debug('send() wrote message: {0}'.format(
-            msg))
 
         result = list()
         iterations = 20
@@ -104,11 +102,7 @@ class Watchdog(object):
             sleep(30.0)
             result = self._read_msg()
 
-        logging.debug('Remaining send() iterations: {0}'.format(iterations))
-
         if result and result[0] == SUCCESS:
-            logging.debug('Sent message: {0}'.format(
-                msg))
             return True
         else:
             logging.warning('Failed to send message: {0}'.format(
@@ -125,9 +119,6 @@ class Watchdog(object):
 
         result = self._read_msg()
         if result and result[0] == STATUS:
-            logging.info('Watchdog status: {0}'.format(
-                result))
-
             self.iridium_status = int(result[1])
             self.gps_satellites = int(result[2])
             self.gps_fix = int(result[3]) == 1
@@ -152,8 +143,6 @@ class Watchdog(object):
 
         try:
             raw_msg = self._wd.read_until()
-            logging.debug('Raw message read: {0}'.format(
-                raw_msg))
             msg = raw_msg.decode("utf-8")
             if not msg:
                 return list()
@@ -162,7 +151,7 @@ class Watchdog(object):
                 return msg[1:-1].split(',')
 
         except SerialTimeoutException:
-            logging.debug('Nothing to read in read_msg()')
+            pass
 
         except Exception as e:
             logging.error('Exception with msg {0}: {1} - {2}'.format(
