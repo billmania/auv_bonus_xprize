@@ -173,6 +173,7 @@ def abort_mission(auv, search_space):
     logging.debug('abort_mission()')
 
     auv.surface()
+    logging.debug('abort_mission(): surface() completed')
     auv.strobe('ON')
     auv.watchdog.send('Aborted')
 
