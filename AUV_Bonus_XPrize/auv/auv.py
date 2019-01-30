@@ -32,6 +32,7 @@ def variables_list():
     variables.append(config['variables']['altitude'])
     variables.append(config['variables']['heading'])
     variables.append(config['variables']['speed'])
+    variables.append(config['variables']['battery'])
 
     return variables
 

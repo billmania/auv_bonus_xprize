@@ -12,6 +12,7 @@ from searchspace.geometry import compass_heading_to_polar_angle
 
 quitting_time = None
 
+
 @unique
 class AUVState(Enum):
     SearchForPlume = 1
@@ -20,6 +21,31 @@ class AUVState(Enum):
     ReportResults = 5
     WaitingToStart = 6
     AbortMission = 9
+
+
+def limit_reached(auv):
+    """limit_reached()
+
+    Check all of the limits. If at least one has been reached,
+    return True.
+    """
+
+    if auv.data_not_updated():
+        logging.error('Data from AUV not up to date')
+
+    battery_voltage = float(auv._auv_data[config['variables']
+                                                ['battery']])
+    min_battery_voltage = float(config['auv']['min_battery_voltage'])
+    if not battery_voltage or battery_voltage < min_battery_voltage:
+        logging.error('min_battery_voltage threshold: {0}'.format(
+            battery_voltage))
+        return True
+
+    if quitting_time and time() > quitting_time:
+        logging.error('Time limit reached')
+        return True
+
+    return False
 
 
 def waiting_to_start(auv, search_space):
@@ -47,7 +73,7 @@ def waiting_to_start(auv, search_space):
 
     time_limit = float(config['search']['time_limit_secs'])
     quitting_time = time() + time_limit
-    logging.debug('time_limit is {0}, quitting_time is {1}'.format(
+    logging.debug('waiting_to_start(): time_limit is {0}, quitting_time is {1}'.format(
         time_limit,
         quitting_time))
 
@@ -77,10 +103,8 @@ def search_for_plume(auv, search_space):
         while auv.move_toward_waypoint(waypt) == 'MORE':
             auv.watchdog.reset()
 
-            if quitting_time:
-                if time() > quitting_time:
-                    logging.warning('Time limit reached in search_for_plume()')
-                    return AUVState.AbortMission
+            if limit_reached(auv):
+                return AUVState.AbortMission
 
             if auv.plume_detected():
                 above_the_bottom = float(config['search']['max_depth']) - auv._auv_data[config['variables']['depth']]
@@ -240,19 +264,13 @@ def main_loop():
     while system_state not in [AUVState.AbortMission,
                                AUVState.ReportResults]:
 
-        if quitting_time:
-            if time() > quitting_time:
-                logging.warning('Time limit reached')
-                system_state = AUVState.AbortMission
-                continue
-
-        if auv.data_not_updated():
-            logging.error('Data from AUV not up to date')
+        if limit_reached(auv):
             system_state = AUVState.AbortMission
-        else:
-            system_state = state_function[system_state](
-                auv,
-                search_space)
+            break
+
+        system_state = state_function[system_state](
+            auv,
+            search_space)
 
         auv.watchdog.reset()
 
