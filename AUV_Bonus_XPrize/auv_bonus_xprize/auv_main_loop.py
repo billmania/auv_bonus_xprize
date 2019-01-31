@@ -10,7 +10,7 @@ from auv.auv import Auv
 from searchspace.searchspace import SearchSpace
 from searchspace.geometry import compass_heading_to_polar_angle
 
-quitting_time = None
+quitting_time = time() + 10.0
 
 
 @unique
@@ -30,6 +30,13 @@ def limit_reached(auv):
     Check all of the limits. If at least one has been reached,
     return True.
     """
+
+#    logging.debug('data: {0}, voltage: {1}, min: {2}, quitting: {3}, time: {4}'.format(
+#        auv.data_not_updated(),
+#        auv._auv_data[config['variables']['battery']],
+#        float(config['auv']['min_battery_voltage']),
+#        quitting_time,
+#        time()))
 
     if auv.data_not_updated():
         logging.error('Data from AUV not up to date')

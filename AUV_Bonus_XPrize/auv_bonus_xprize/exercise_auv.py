@@ -6,7 +6,6 @@ Exercise move_to_waypoint()
 import logging
 from time import sleep, time
 
-quitting_time = time() + 600.0
 
 from auv_bonus_xprize.settings import config
 from auv_bonus_xprize.auv_main_loop import limit_reached
