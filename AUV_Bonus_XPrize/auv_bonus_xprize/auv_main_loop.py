@@ -16,8 +16,9 @@ quitting_time = None
 @unique
 class AUVState(Enum):
     SearchForPlume = 1
-    NewSearchArea = 2
+    ConstrainSearchArea = 2
     Done = 3
+    ShiftSearchArea = 4
     ReportResults = 5
     WaitingToStart = 6
     AbortMission = 9
@@ -107,56 +108,46 @@ def search_for_plume(auv, search_space):
                 return AUVState.AbortMission
 
             if auv.plume_detected():
-                above_the_bottom = float(config['search']['max_depth']) - auv._auv_data[config['variables']['depth']]
+                current_depth = auv._auv_data[config['variables']['depth']]
+                above_the_bottom = float(config['search']['max_depth']) - current_depth
                 depth_tolerance = float(config['auv']['depth_tolerance'])
-                if above_the_bottom <= depth_tolerance:
+                if abs(above_the_bottom) <= depth_tolerance:
                     return AUVState.ReportResults
                 else:
-                    return AUVState.NewSearchArea
+                    if search_for_plume.already_constrained:
+                        return AUVState.ShiftSearchArea
+                    else:
+                        search_for_plume.already_constrained = True
+                        return AUVState.ConstrainSearchArea
 
             loop_hz()
 
-    return AUVState.AbortMission
+    return AUVState.ShiftSearchArea
 
 
-def new_search_area(auv, search_space):
-    """new_search_area()
+def constrain_search_area(auv, search_space):
+    """constrain_search_area()
 
     Further constrain the search area, so a new
-    search path can be calculated and based on the
-    current position of the AUV.
-
-    Update the definitions of the search space in the
-    config dictionary.
-    - move the starting position up_stream_shift meters
-      up-current
-    - define new vertices which are aligned with north-south
-      and vertex_offset meters from the new starting
-      position
-    - set the min_depth to the current depth plus
-      min_depth_offset meters
-
+    search path can be calculated based on a new
+    position of the AUV which has been shifted up-current.
     """
 
-    logging.debug('new_search_area()')
+    constrain_search_area.already_constrained = False
+
+    logging.debug('constrain_search_area()')
 
     auv_x = auv._auv_data[config['variables']['easting_x']]
     auv_y = auv._auv_data[config['variables']['northing_y']]
-    auv_depth = auv._auv_data[config['variables']['depth']]
-
     up_current_bearing = (int(config['starting']['set']) + 180) % 360
     up_current_offset = float(config['search']['up_current_offset'])
-    vertex_offset = float(config['search']['vertex_offset'])
-    min_depth_offset = float(config['search']['min_depth_offset'])
-
     angle_to_start = compass_heading_to_polar_angle(up_current_bearing)
     starting_x = round(cos(angle_to_start) * up_current_offset + auv_x, 1)
     starting_y = round(sin(angle_to_start) * up_current_offset + auv_y, 1)
-
     new_auv_position_utm = '{0},{1}'.format(starting_x, starting_y)
-
     config['starting']['auv_position_utm'] = new_auv_position_utm
 
+    vertex_offset = float(config['search']['vertex_offset'])
     northern_y = round(starting_y + vertex_offset, 1)
     eastern_x = round(starting_x + vertex_offset, 1)
     southern_y = round(starting_y - vertex_offset, 1)
@@ -165,14 +156,37 @@ def new_search_area(auv, search_space):
     northeast_utm = '{0},{1}'.format(eastern_x, northern_y)
     southeast_utm = '{0},{1}'.format(eastern_x, southern_y)
     southwest_utm = '{0},{1}'.format(western_x, southern_y)
-
     config['starting']['northwest_utm'] = northwest_utm
     config['starting']['northeast_utm'] = northeast_utm
     config['starting']['southeast_utm'] = southeast_utm
     config['starting']['southwest_utm'] = southwest_utm
 
+    min_depth_offset = float(config['search']['min_depth_offset'])
+    auv_depth = auv._auv_data[config['variables']['depth']]
     if (auv_depth - min_depth_offset) > float(config['search']['min_depth_meters']):
         config['search']['min_depth_meters'] = '{0}'.format(auv_depth - min_depth_offset)
+
+    return AUVState.SearchForPlume
+
+
+def shift_search_area(auv, search_space):
+    """shift_search_area()
+
+    Don't constrain the search area, only
+    move the AUV's start position up-current.
+    """
+
+    logging.debug('shift_search_area()')
+
+    auv_x = auv._auv_data[config['variables']['easting_x']]
+    auv_y = auv._auv_data[config['variables']['northing_y']]
+    up_current_bearing = (int(config['starting']['set']) + 180) % 360
+    up_current_offset = float(config['search']['up_current_offset'])
+    angle_to_start = compass_heading_to_polar_angle(up_current_bearing)
+    starting_x = round(cos(angle_to_start) * up_current_offset + auv_x, 1)
+    starting_y = round(sin(angle_to_start) * up_current_offset + auv_y, 1)
+    new_auv_position_utm = '{0},{1}'.format(starting_x, starting_y)
+    config['starting']['auv_position_utm'] = new_auv_position_utm
 
     return AUVState.SearchForPlume
 
@@ -233,9 +247,12 @@ def loop_hz():
 state_function = dict()
 state_function[AUVState.WaitingToStart] = waiting_to_start
 state_function[AUVState.SearchForPlume] = search_for_plume
-state_function[AUVState.NewSearchArea] = new_search_area
+state_function[AUVState.ConstrainSearchArea] = constrain_search_area
+state_function[AUVState.ShiftSearchArea] = shift_search_area
 state_function[AUVState.ReportResults] = report_results
 state_function[AUVState.AbortMission] = abort_mission
+
+search_for_plume.already_constrained = False
 
 
 def main_loop():

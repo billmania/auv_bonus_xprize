@@ -8,11 +8,11 @@ def auv_position():
 
     return auv_x, auv_y, auv_depth
 
-def test_new_search_area(monkeypatch, mocker, auv_position):
-    """test_new_search_area()
+def test_constrain_search_area(monkeypatch, mocker, auv_position):
+    """test_constrain_search_area()
     """
 
-    from auv_bonus_xprize.auv_main_loop import new_search_area
+    from auv_bonus_xprize.auv_main_loop import constrain_search_area
 
     from auv.auv import variables_list
 
@@ -50,7 +50,7 @@ def test_new_search_area(monkeypatch, mocker, auv_position):
     config['search']['vertex_offset'] = '10.0'
     config['search']['min_depth_offset'] = '10.0'
 
-    new_search_area(auv, object())
+    constrain_search_area(auv, object())
     assert config['starting']['auv_position_utm'] == '95.0,200.0'
     assert config['search']['min_depth_meters'] == '5.0'
 
@@ -60,7 +60,7 @@ def test_new_search_area(monkeypatch, mocker, auv_position):
                          northing_y: auv_position[1],
                          depth: 25.0})
 
-    new_search_area(auv, object())
+    constrain_search_area(auv, object())
     assert config['search']['min_depth_meters'] == '15.0'
     assert config['starting']['northwest_utm'] == '85.0,210.0'
     assert config['starting']['northeast_utm'] == '105.0,210.0'
