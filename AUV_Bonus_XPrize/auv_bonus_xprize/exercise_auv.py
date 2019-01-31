@@ -30,6 +30,7 @@ while not auv.auv_control.connected:
 
 PAUSE = float(config['starting']['start_delay_secs'])
 logging.debug('Pausing for {0} seconds'.format(PAUSE))
+sleep(PAUSE)
 
 auv.watchdog.reset()
 logging.debug('enable_steering()')
