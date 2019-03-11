@@ -41,6 +41,8 @@ def _starting_waypt():
     """
 
     auv_position = config['starting']['auv_position_utm'].split(',')
+    logging.debug('_starting_waypt(): Setting AUV position {0}'.format(
+        auv_position))
     return Point(float(auv_position[0]),
                  float(auv_position[1]))
 

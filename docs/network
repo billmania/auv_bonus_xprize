@@ -10,6 +10,10 @@ nmcli device
 nmcli device wifi rescan
 nmcli device wifi list
 nmcli device wifi connect RTASUUV password XXXXXXXXX
+
+Danny's iPhone: danndann
+PUERTOPONCE: puerto@2o14
+
 nmcli connection
 
 nmcli device wifi disconnect

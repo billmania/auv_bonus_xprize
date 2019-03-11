@@ -225,6 +225,11 @@ class Auv(object):
             heading = float((int(heading) + turn_amount) % 360)
             sleep(1.0)
 
+        self.auv_control.publish_variable(
+            config['variables']['set_speed'],
+            0.0,
+            -1)
+
     def strobe(self, state):
         """strobe()
 

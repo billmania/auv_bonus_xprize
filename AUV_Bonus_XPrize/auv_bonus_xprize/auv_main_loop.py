@@ -194,6 +194,8 @@ def shift_search_area(auv, search_space):
     starting_y = round(sin(angle_to_start) * up_current_offset + auv_y, 1)
     new_auv_position_utm = '{0},{1}'.format(starting_x, starting_y)
     config['starting']['auv_position_utm'] = new_auv_position_utm
+    logging.debug('shift_search_area(): New AUV start position: {0}'.format(
+        config['starting']['auv_position_utm']))
 
     return AUVState.SearchForPlume
 
