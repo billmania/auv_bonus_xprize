@@ -1,3 +1,16 @@
+#
+# Designed and written by:
+# Bill Mania
+# bill@manialabs.us
+#
+# under contract to:
+# Valley Christian Schools
+# San Jose, CA
+#
+# to compete in the:
+# NOAA Bonus XPrize
+# January 2019
+#
 from auv_bonus_xprize.settings import config
 from searchspace.searchspace import SearchSpace
 

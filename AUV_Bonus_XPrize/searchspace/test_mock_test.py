@@ -1,3 +1,16 @@
+#
+# Designed and written by:
+# Bill Mania
+# bill@manialabs.us
+#
+# under contract to:
+# Valley Christian Schools
+# San Jose, CA
+#
+# to compete in the:
+# NOAA Bonus XPrize
+# January 2019
+#
 def test_monkeypatch(monkeypatch):
     def new_set_func(self, new_value):
         self.instance_variable = new_value * 2
